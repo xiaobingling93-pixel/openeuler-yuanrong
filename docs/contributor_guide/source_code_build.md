@@ -40,7 +40,7 @@
 
 :::{tip}
 
-我们在每个代码仓库根目录都提供了一键安装编译工具的脚本 'install_tools.sh'，可选择使用命令 'bash install_tools.sh' 执行安装。
+我们在每个代码仓库根目录都提供了一键安装编译工具的脚本 `install_tools.sh`，可选择使用命令 `bash install_tools.sh` 执行安装。
 
 :::
 
@@ -51,9 +51,9 @@ openYuanrong 分为四个代码仓库：
 * [yuanrong-runtime](https://gitee.com/openeuler/yuanrong-runtime){target="_blank"}：运行时仓库，编译依赖 yuanrong-functionsystem 和 yuanrong-datasystem 仓库的发布包。
 * [yuanrong-functionsystem](https://gitee.com/openeuler/yuanrong-functionsystem){target="_blank"}：函数系统仓库，编译依赖 yuanrong-datasystem 仓库的发布包。
 * [yuanrong-datasystem](https://gitee.com/openeuler/yuanrong-datasystem){target="_blank"} ：数据系统仓库，可独立编译。
-* [yuanrong-ray-adaptor](https://gitee.com/openeuler/yuanrong-ray-adaptor){target="_blank"}：ray adaptor 仓库，可独立编译。
+* [ray-adapter](https://gitee.com/openeuler/ray-adapter){target="_blank"}：ray adapter 仓库，可独立编译。
 
-使用多语言函数编程接口，需要编译 yuanrong-runtime 仓库；单独使用数据系统接口，需要编译 yuanrong-datasystem 仓库；使用 ray adaptor 接口，需要编译 yuanrong-ray-adaptor 仓库。
+使用多语言函数编程接口，需要编译 yuanrong-runtime 仓库；单独使用数据系统接口，需要编译 yuanrong-datasystem 仓库；使用 ray adapter 接口，需要编译 ray-adapter 仓库。
 
 ### 编译 yuanrong-datasystem
 
@@ -150,23 +150,23 @@ bash build.sh -P
 * `openyuanrong-x.x.x-cp39-cp39-manylinux_2_17_x86_64.whl`：whl 安装包，包括命令行工具及 Python SDK。
 * `yr-runtime-vx.x.x.tar.gz`：运行时发布包。
 
-### 编译 yuanrong-ray-adaptor
+### 编译 ray-adapter
 
 首先下载源码。创建一个代码目录，例如 `mkdir -p /opt/openyuanrong/`，在目录下执行如下命令。
 
 ```bash
-# 这里下载的是 yuanrong-ray-adaptor 仓 master 分支，按需替换为您 fork 的个人仓。
-git clone -b master https://gitee.com/openeuler/yuanrong-ray-adaptor.git
+# 这里下载的是 ray-adapter 仓 master 分支，按需替换为您 fork 的个人仓。
+git clone -b master https://gitee.com/openeuler/ray-adapter.git
 ```
 
 执行如下脚本编译。
 
 ```bash
 # 通过 bash build.sh -h 了解更多编译选项
-cd /opt/openyuanrong/yuanrong-ray-adaptor
+cd /opt/openyuanrong/ray-adapter
 bash build.sh
 ```
 
-编译产物生成在 `yuanrong-ray-adaptor/output` 目录下，包含如下文件：
+编译产物生成在 `ray-adapter/output` 目录下，包含如下文件：
 
-* `yr_ray_adaptor-x.x.x.whl`：whl 安装包。
+* `ray_adapter-x.x.x.whl`：whl 安装包。

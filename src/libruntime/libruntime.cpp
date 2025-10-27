@@ -1551,7 +1551,8 @@ std::pair<YR::Libruntime::FunctionMeta, ErrorInfo> Libruntime::GetInstance(const
 {
     auto [meta, err] = this->invokeAdaptor->GetInstance(name, nameSpace, timeoutSec);
     if (err.OK() && meta.needOrder) {
-        this->invokeOrderMgr->RegisterInstance(nameSpace.empty() ? name : nameSpace + "-" + name);
+        this->invokeOrderMgr->RegisterInstance(
+                nameSpace.empty() ? this->config->ns + "-" + name : nameSpace + "-" + name);
     }
     return std::make_pair<>(meta, err);
 }

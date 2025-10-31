@@ -16,7 +16,7 @@
  */
 #include "yr/api/local_state_store.h"
 #include <vector>
-#include <regex>
+#include "re2/re2.h"
 #include "parallel_for/complier.h"
 #include "src/libruntime/err_type.h"
 #include "src/libruntime/statestore/state_store.h"
@@ -33,7 +33,7 @@ const int MIN_CHECK_INTERVAL_MS = 200;
 const int MAX_CHECK_INTERVAL_MS = 1000;
 const int GET_RETRY_MAX_TIME = 5;
 const int MAX_MSET_SIZE = 8;
-const std::regex KEY_REGEX("^[a-zA-Z0-9\\~\\.\\-\\/_!@#%\\^\\&\\*\\(\\)\\+\\=\\:;]*$");
+const re2::RE2 KEY_REGEX("^[a-zA-Z0-9\\~\\.\\-\\/_!@#%\\^\\&\\*\\(\\)\\+\\=\\:;]*$");
 
 LocalStateStore::LocalStateStore() {}
 
@@ -51,10 +51,9 @@ void LocalStateStore::Write(const std::string &key, std::shared_ptr<msgpack::sbu
     kv_map[key] = value;
 }
 
-bool IsRegexMatch(const std::regex &re, const std::string &key)
+bool IsRegexMatch(const re2::RE2 &re, const std::string &key)
 {
-    std::smatch matches;
-    if (key.size() <= UINT8_MAX && (std::regex_match(key, matches, re) || key.empty())) {
+    if (key.size() <= UINT8_MAX && (RE2::PartialMatch(key, re) || key.empty())) {
         return true;
     }
     return false;

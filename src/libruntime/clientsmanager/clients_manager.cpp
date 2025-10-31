@@ -23,7 +23,7 @@ std::pair<std::shared_ptr<grpc::Channel>, ErrorInfo> ClientsManager::GetFsConn(c
 {
     auto addr = GetIpAddr(ip, port);
     YRLOG_DEBUG("grpc client target is {}", addr);
-    if (!std::regex_match(addr, std::regex(IP_PORT_REGEX))) {
+    if (!RE2::FullMatch(addr, re2::RE2(IP_PORT_REGEX))) {
         YRLOG_ERROR("failed to get valid runtime-rpc server address({})", addr);
         return std::make_pair(nullptr, ErrorInfo(ErrorCode::ERR_CONNECTION_FAILED, "The server address is invalid."));
     }

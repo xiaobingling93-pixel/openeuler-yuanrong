@@ -17,7 +17,6 @@
 #pragma once
 
 #include <grpcpp/grpcpp.h>
-#include <regex>
 
 #include "src/libruntime/err_type.h"
 #include "src/libruntime/gwclient/http/client_manager.h"

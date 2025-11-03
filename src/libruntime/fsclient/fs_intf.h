@@ -83,7 +83,7 @@ using SubscriptionPayload = ::core_service::SubscriptionPayload;
 using NotificationPayload = ::core_service::NotificationPayload;
 using InstanceTermination = ::core_service::InstanceTermination;
 using FunctionMasterObserve = ::core_service::FunctionMasterObserve;
-using KillCallBack = std::function<void(const KillResponse &)>;
+using KillCallBack = std::function<void(const KillResponse &, const ErrorInfo &)>;
 
 using ExitRequest = ::core_service::ExitRequest;
 using ExitResponse = ::core_service::ExitResponse;

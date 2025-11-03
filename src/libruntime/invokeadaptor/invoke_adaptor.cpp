@@ -998,7 +998,7 @@ void InvokeAdaptor::KillRaw(std::shared_ptr<Buffer> reqRaw, RawCallback cb)
 {
     KillRequest req;
     req.ParseFromString(std::string(static_cast<char *>(reqRaw->MutableData()), reqRaw->GetSize()));
-    this->fsClient->KillAsync(req, [this, cb](const KillResponse &resp) -> void {
+    this->fsClient->KillAsync(req, [this, cb](const KillResponse &resp, ErrorInfo err) -> void {
         YRLOG_DEBUG("recieve kill raw response, code is {}", resp.code());
         size_t size = resp.ByteSizeLong();
         auto respRaw = std::make_shared<NativeBuffer>(size);
@@ -1348,7 +1348,7 @@ ErrorInfo InvokeAdaptor::Kill(const std::string &instanceId, const std::string &
 
     auto killPromise = std::make_shared<std::promise<KillResponse>>();
     std::shared_future<KillResponse> killFuture = killPromise->get_future().share();
-    this->fsClient->KillAsync(killReq, [killPromise](KillResponse rsp) -> void { killPromise->set_value(rsp); });
+    this->fsClient->KillAsync(killReq, [killPromise](KillResponse rsp, ErrorInfo err) -> void { killPromise->set_value(rsp); });
     ErrorInfo errInfo;
     if (signal == libruntime::Signal::killInstanceSync) {
         errInfo = WaitAndCheckResp(killFuture, instanceId, NO_TIMEOUT);
@@ -1366,7 +1366,7 @@ void InvokeAdaptor::KillAsync(const std::string &instanceId, const std::string &
     killReq.set_instanceid(instanceId);
     killReq.set_payload(payload);
     killReq.set_signal(signal);
-    this->fsClient->KillAsync(killReq, [killReq](KillResponse rsp) -> void {
+    this->fsClient->KillAsync(killReq, [killReq](KillResponse rsp, ErrorInfo err) -> void {
         if (rsp.code() != common::ERR_NONE) {
             YRLOG_WARN("kill request failed, ins id is {}, signal is {}, err code is {}, err msg is {}",
                        killReq.instanceid(), killReq.signal(), rsp.code(), rsp.message());
@@ -1655,17 +1655,18 @@ std::pair<YR::Libruntime::FunctionMeta, ErrorInfo> InvokeAdaptor::GetInstance(co
     killReq.set_signal(libruntime::Signal::GetInstance);
     auto promise = std::promise<std::pair<libruntime::FunctionMeta, ErrorInfo>>();
     auto future = promise.get_future();
-    this->fsClient->KillAsync(killReq, [&promise](const KillResponse &rsp) -> void {
+    this->fsClient->KillAsync(killReq, [&promise](const KillResponse &rsp, const ErrorInfo &err) -> void {
         if (rsp.code() != common::ERR_NONE) {
             YR::Libruntime::ErrorInfo errInfo(static_cast<ErrorCode>(rsp.code()), ModuleCode::RUNTIME,
                                               rsp.message());
+            errInfo.SetIsTimeout(err.IsTimeout());
             promise.set_value(std::make_pair(libruntime::FunctionMeta{}, errInfo));
         } else {
             libruntime::FunctionMeta funcMeta;
             funcMeta.ParseFromString(rsp.message());
             promise.set_value(std::make_pair(funcMeta, YR::Libruntime::ErrorInfo()));
         }
-    });
+    }, timeoutSec);
     auto [funcMeta, errorInfo] = future.get();
     YRLOG_DEBUG("get instance finished, err code is {}, err msg is {}, function meta is {}", errorInfo.Code(),
                 errorInfo.Msg(), funcMeta.DebugString());
@@ -1727,7 +1728,7 @@ void InvokeAdaptor::Subscribe(const std::string &insId)
     killReq.set_payload(serializedPayload);
     auto weakThis = weak_from_this();
     YRLOG_DEBUG("start send subscribe req of instance: {}", insId);
-    this->fsClient->KillAsync(killReq, [insId, weakThis](KillResponse rsp) -> void {
+    this->fsClient->KillAsync(killReq, [insId, weakThis](KillResponse rsp, ErrorInfo err) -> void {
         if (rsp.code() != common::ERR_NONE) {
             YRLOG_WARN("subcribe ins status failed, ins id is : {}, code is {}, msg is {},", insId, rsp.code(),
                        rsp.message());
@@ -1792,7 +1793,7 @@ void InvokeAdaptor::SubscribeActiveMaster()
     killReq.set_payload(serializedPayload);
     auto weakThis = weak_from_this();
     YRLOG_DEBUG("start send subscribe function master req of instance: {}", instanceId);
-    this->fsClient->KillAsync(killReq, [instanceId](KillResponse rsp) -> void {
+    this->fsClient->KillAsync(killReq, [instanceId](KillResponse rsp, ErrorInfo err) -> void {
         YRLOG_DEBUG("get subcribe function master response, ins id is : {}, code is {},", instanceId, rsp.code());
     });
 }

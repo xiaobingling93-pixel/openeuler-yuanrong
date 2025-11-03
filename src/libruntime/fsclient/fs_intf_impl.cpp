@@ -540,7 +540,7 @@ void FSIntfImpl::KillAsync(const KillRequest &req, KillCallBack callback, int ti
                                           std::function<void(bool)> needEraseWiredReq) {
         YRLOG_DEBUG("Receive kill response, request ID:{}", reqId);
         if (status.OK() && killResp.has_killrsp()) {
-            callback(killResp.killrsp());
+            callback(killResp.killrsp(), ErrorInfo());
             needEraseWiredReq(true);
             return;
         }
@@ -550,7 +550,7 @@ void FSIntfImpl::KillAsync(const KillRequest &req, KillCallBack callback, int ti
         resp.set_message(status.Msg());
         YRLOG_DEBUG("Receive kill response, request ID:{}, error code: {}, error message: {}", reqId, status.Code(),
                     status.Msg());
-        callback(resp);
+        callback(resp, status);
         needEraseWiredReq(true);
         return;
     };
@@ -575,10 +575,10 @@ void FSIntfImpl::KillAsync(const KillRequest &req, KillCallBack callback, int ti
                 YRLOG_ERROR("Request timeout, start exec notify callback, request ID : {}", reqId);
                 StreamingMessage fake;
                 if (wiredReq->callback != nullptr) {
-                    wiredReq->callback(fake,
-                                       ErrorInfo(ErrorCode::ERR_INNER_SYSTEM_ERROR, ModuleCode::CORE,
-                                                 "kill request timeout, requestId: " + reqId),
-                                       [](bool needEraseWiredReq) {});
+                    auto timeoutErr = ErrorInfo(ErrorCode::ERR_INNER_SYSTEM_ERROR, ModuleCode::CORE,
+                                                "kill request timeout, requestId: " + reqId);
+                    timeoutErr.SetIsTimeout(true);
+                    wiredReq->callback(fake, timeoutErr, [](bool needEraseWiredReq) {});
                 }
                 EraseWiredRequest(reqId);
             }

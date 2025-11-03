@@ -311,7 +311,7 @@ TEST_F(FSClientGrpcTest, GrpcClientTest_KillAsync)
     DoStartGrpcClient();
 
     NotificationUtility notify;
-    auto cb = [&notify](const KillResponse &req) -> void { notify.Notify(); };
+    auto cb = [&notify](const KillResponse &req, ErrorInfo err) -> void { notify.Notify(); };
 
     KillRequest req;
     fsClient_->KillAsync(req, cb, -1);
@@ -333,7 +333,7 @@ TEST_F(FSClientGrpcTest, GrpcClientTest_KillAsyncTimeout)
     DoStartGrpcClient();
 
     NotificationUtility notify;
-    auto cb = [&notify](const KillResponse &req) -> void {
+    auto cb = [&notify](const KillResponse &req, ErrorInfo e) -> void {
         auto err = ErrorInfo(static_cast<ErrorCode>(req.code()), req.message());
         notify.Notify(err);
     };
@@ -681,7 +681,7 @@ TEST_F(FSClientGrpcTest, ReconnectTest)
     grpcServer = std::make_shared<FakeGrpcServer>(Config::Instance().HOST_IP());
     grpcServer->StartWithPort(port);
     NotificationUtility notify;
-    auto cb = [&notify](const KillResponse &req) -> void { notify.Notify(); };
+    auto cb = [&notify](const KillResponse &req, ErrorInfo err) -> void { notify.Notify(); };
 
     KillRequest req;
     fsClient_->KillAsync(req, cb, -1);

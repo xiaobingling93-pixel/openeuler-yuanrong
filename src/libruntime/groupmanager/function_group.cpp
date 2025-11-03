@@ -217,7 +217,7 @@ ErrorInfo FunctionGroup::Accelerate(const AccelerateMsgQueueHandle &handle, Hand
         killReq.set_instanceid(instanceIdList[i]);
         killReq.set_payload(payload);
         killReq.set_signal(libruntime::Signal::Accelerate);
-        fsClient->KillAsync(killReq, [killPromise](KillResponse rsp) { killPromise->set_value(rsp); });
+        fsClient->KillAsync(killReq, [killPromise](KillResponse rsp, ErrorInfo err) { killPromise->set_value(rsp); });
     }
     std::vector<AccelerateMsgQueueHandle> handles;
     std::vector<std::string> objIds;

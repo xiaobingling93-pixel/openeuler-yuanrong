@@ -32,7 +32,7 @@ void NormalInsManager::SendKillReq(const std::string &insId)
     killReq.set_payload("");
     killReq.set_signal(libruntime::Signal::KillInstance);
     YRLOG_DEBUG("start send kill req, ins id is {}", insId);
-    this->fsClient->KillAsync(killReq, [insId](KillResponse rsp) -> void {
+    this->fsClient->KillAsync(killReq, [insId](KillResponse rsp, ErrorInfo err) -> void {
         if (rsp.code() != common::ERR_NONE) {
             YRLOG_WARN("kill req send failed, instance id is {}", insId);
         }

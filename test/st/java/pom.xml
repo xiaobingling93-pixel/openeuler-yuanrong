@@ -16,7 +16,7 @@
         <dependency>
             <groupId>com.yuanrong</groupId>
             <artifactId>yr-api-sdk</artifactId>
-            <version>1.0.0</version>
+            <version>v0.0.1</version>
         </dependency>
         <dependency>
             <groupId>org.testng</groupId>

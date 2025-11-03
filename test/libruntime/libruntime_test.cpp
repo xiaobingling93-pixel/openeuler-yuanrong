@@ -1132,7 +1132,7 @@ TEST_F(LibruntimeTest, DISABLED_resourcegroupTest)
             if (cb != nullptr) {
                 YR::Libruntime::KillResponse resp;
                 resp.set_code(static_cast<common::ErrorCode>(1001));
-                cb(resp);
+                cb(resp, ErrorInfo());
             }
         });
     std::vector<std::unordered_map<std::string, double>> bundles1 = {

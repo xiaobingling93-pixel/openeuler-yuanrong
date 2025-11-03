@@ -43,7 +43,7 @@ DATA_SYSTEM_CACHE=${DATA_SYSTEM_CACHE:-"https://build-logs.openeuler.openatom.cn
 FUNCTION_SYSTEM_CACHE=${FUNCTION_SYSTEM_CACHE:-"https://build-logs.openeuler.openatom.cn:38080/temp-archived/openeuler/openYuanrong/yr_cache/$(uname -m)/yr-functionsystem-v0.5.0.tar.gz"}
 function check_datasystem() {
     # check whether datasystem exist
-    if [ ! -d "${YR_DATASYSTEM_BIN_DIR}"/datasystem/output/sdk/cpp/include ]; then
+    if [ ! -d "${YR_DATASYSTEM_BIN_DIR}"/output/sdk/cpp/include ]; then
         echo "datasystem sdk not exist!"
         exit 1
     fi
@@ -59,11 +59,11 @@ function check_metrics(){
 
 function download_datasystem() {
     # check whether datasystem exist
-    if [ -d "${YR_DATASYSTEM_BIN_DIR}"/datasystem/output/sdk/cpp/include ]; then
+    if [ -d "${YR_DATASYSTEM_BIN_DIR}"/output/sdk/cpp/include ]; then
         echo "datasystem sdk exist."
         return
     fi
-    DS_OUT_DIR="${YR_DATASYSTEM_BIN_DIR}/datasystem/output"
+    DS_OUT_DIR="${YR_DATASYSTEM_BIN_DIR}/output"
     mkdir -p "${DS_OUT_DIR}"
     pushd "${DS_OUT_DIR}"
     wget -O datasystem.tar.gz ${DATA_SYSTEM_CACHE}

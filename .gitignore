@@ -40,6 +40,7 @@ test/st/functions/**/*.zip
 test/st/functions/**/*.xml
 functionsystem
 datasystem
+metrics
 #thirdparty
 thirdparty
 go/pkg/mod/

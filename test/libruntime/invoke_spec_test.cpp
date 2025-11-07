@@ -238,7 +238,7 @@ TEST_F(InvokeSpecTest, BuildInstanceCreateRequestTest)
     spec->functionMeta.functionId = "functionId";
     ResourceGroupOptions resourceGroupOpts;
     resourceGroupOpts.resourceGroupName = "testResourceGroup";
-    spec.opts.resourceGroupOpts = resourceGroupOpts;
+    spec->opts.resourceGroupOpts = resourceGroupOpts;
     LibruntimeConfig config;
     spec->BuildInstanceCreateRequest(config);
     ASSERT_EQ(spec->requestCreate.mutable_schedulingops()->mutable_resources()->size() != 0, true);

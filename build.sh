@@ -354,6 +354,6 @@ if [ "$BAZEL_COMMAND" == "build" ]; then
 fi
 
 if [ "$PACKAGE_ALL" == "true" ]; then
-    bash ${BASE_DIR}/scripts/package.sh -t ${BUILD_VERSION}
+    bash ${BASE_DIR}/scripts/package.sh -t ${BUILD_VERSION} --python_bin_path ${PYTHON3_BIN_PATH}
 fi
 cd -

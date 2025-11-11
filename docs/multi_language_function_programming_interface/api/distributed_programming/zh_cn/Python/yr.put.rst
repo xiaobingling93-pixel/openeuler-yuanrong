@@ -11,7 +11,7 @@ yr.put
         3. 如果传递给 put 的对象类型为 memoryview，bytearray 或 bytes，则其长度不能为 ``0``。
 
     参数:
-        - **obj** (object) - 需要被远程调用的函数。
+        - **obj** (object) - Python 对象，被序列化并保存到数据系统中。
         - **create_param** (CreateParam()，可选) - 这是为数据系统创建对象时的参数。
 
     返回:

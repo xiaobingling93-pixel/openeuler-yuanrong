@@ -204,6 +204,7 @@ struct GroupOpts {
     std::string groupName;
     int timeout;
     bool sameLifecycle = true;
+    std::string strategy;
 };
 
 struct InstanceOptions {

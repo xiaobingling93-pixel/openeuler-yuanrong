@@ -1555,7 +1555,7 @@ ErrorInfo InvokeAdaptor::GroupCreate(const std::string &groupName, GroupOpts &op
 {
     if (!this->groupManager->IsGroupExist(groupName)) {
         auto group = std::make_shared<NamedGroup>(groupName, librtConfig->tenantId, opts, this->fsClient,
-                                                  this->waitingObjectManager, this->memStore);
+                                                  this->waitingObjectManager, this->memStore, this->invokeOrderMgr);
         this->groupManager->AddGroup(group);
         return this->groupManager->GroupCreate(groupName);
     }
@@ -1607,6 +1607,16 @@ ErrorInfo InvokeAdaptor::GroupWait(const std::string &groupName)
 void InvokeAdaptor::GroupTerminate(const std::string &groupName)
 {
     return this->groupManager->Terminate(groupName);
+}
+
+ErrorInfo InvokeAdaptor::GroupSuspend(const std::string &groupName)
+{
+    return this->groupManager->Suspend(groupName);
+}
+
+ErrorInfo InvokeAdaptor::GroupResume(const std::string &groupName)
+{
+    return this->groupManager->Resume(groupName);
 }
 
 std::pair<std::vector<std::string>, ErrorInfo> InvokeAdaptor::GetInstanceIds(const std::string &objId,

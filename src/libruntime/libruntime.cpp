@@ -15,8 +15,10 @@
  */
 
 #include "src/libruntime/libruntime.h"
+#include "src/libruntime/libruntime.h"
 #include <iostream>
 #include "invoke_order_manager.h"
+#include "re2/re2.h"
 #include "re2/re2.h"
 #include "src/dto/config.h"
 #include "src/dto/data_object.h"
@@ -1398,6 +1400,16 @@ void Libruntime::GroupTerminate(const std::string &groupName)
     return this->invokeAdaptor->GroupTerminate(groupName);
 }
 
+ErrorInfo Libruntime::GroupSuspend(const std::string &groupName)
+{
+    return this->invokeAdaptor->GroupSuspend(groupName);
+}
+
+ErrorInfo Libruntime::GroupResume(const std::string &groupName)
+{
+    return this->invokeAdaptor->GroupResume(groupName);
+}
+
 std::pair<std::vector<std::string>, ErrorInfo> Libruntime::GetInstances(const std::string &objId, int timeoutSec)
 {
     return this->memStore->GetInstanceIds(objId, timeoutSec);
@@ -1774,9 +1786,9 @@ std::pair<YR::Libruntime::FunctionMeta, ErrorInfo> Libruntime::GetInstance(const
                                                                            const std::string &nameSpace, int timeoutSec)
 {
     auto [meta, err] = this->invokeAdaptor->GetInstance(name, nameSpace, timeoutSec);
-    if (!err.OK() || !meta.needOrder) {
-        this->invokeOrderMgr->ClearInsOrderMsg(nameSpace.empty() ? name : nameSpace + "-" + name,
-                                               libruntime::Signal::KillInstance);
+    if (err.OK() && meta.needOrder) {
+        this->invokeOrderMgr->RegisterInstance(nameSpace.empty() ? this->config->ns + "-" + name
+                                                                 : nameSpace + "-" + name);
     }
     return std::make_pair<>(meta, err);
 }

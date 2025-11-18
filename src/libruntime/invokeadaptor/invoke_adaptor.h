@@ -47,6 +47,8 @@
 #include "src/libruntime/objectstore/object_store.h"
 #include "src/libruntime/rgroupmanager/resource_group_create_spec.h"
 #include "src/libruntime/rgroupmanager/resource_group_manager.h"
+#include "src/libruntime/rgroupmanager/resource_group_create_spec.h"
+#include "src/libruntime/rgroupmanager/resource_group_manager.h"
 #include "src/libruntime/runtime_context.h"
 #include "src/libruntime/utils/constants.h"
 #include "src/libruntime/utils/exception.h"
@@ -132,7 +134,12 @@ public:
 
     virtual void GroupTerminate(const std::string &groupName);
 
+    virtual ErrorInfo GroupSuspend(const std::string &groupName);
+
+    virtual ErrorInfo GroupResume(const std::string &groupName);
+
     virtual std::pair<std::vector<std::string>, ErrorInfo> GetInstanceIds(const std::string &objId,
+                                                                          const std::string &groupName);
                                                                           const std::string &groupName);
 
     virtual ErrorInfo SaveState(const std::shared_ptr<Buffer> data, const int &timeout);
@@ -156,6 +163,8 @@ public:
     virtual std::pair<YR::Libruntime::FunctionMeta, ErrorInfo> GetInstance(const std::string &name,
                                                                            const std::string &nameSpace,
                                                                            int timeoutSec);
+                                                                           const std::string &nameSpace,
+                                                                           int timeoutSec);
     void SubscribeAll();
     void Subscribe(const std::string &insId);
     void SubscribeActiveMaster();
@@ -172,7 +181,7 @@ public:
 
     virtual std::pair<ErrorInfo, std::string> GetNodeId();
     virtual std::pair<ErrorInfo, std::vector<ResourceUnit>> GetResources(void);
-    virtual std::pair<ErrorInfo, ResourceGroupUnit> GetResourceGroupTable(const std::string &resourceGroupId);\
+    virtual std::pair<ErrorInfo, ResourceGroupUnit> GetResourceGroupTable(const std::string &resourceGroupId);
     virtual std::pair<ErrorInfo, QueryNamedInsResponse> QueryNamedInstances();
 
 private:

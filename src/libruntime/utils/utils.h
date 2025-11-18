@@ -34,6 +34,8 @@
 namespace YR {
 using CallResult = ::core_service::CallResult;
 using NotifyRequest = ::runtime_service::NotifyRequest;
+using GroupPolicy = ::common::GroupPolicy;
+
 using datasystem::ConnectOptions;
 struct IpAddrInfo {
     std::string ip;
@@ -63,4 +65,5 @@ std::tm ParseTimestamp(const std::string &timestamp);
 std::string GetEnvValue(const std::string &key);
 int32_t ToMs(int32_t timeoutS);
 bool WillSizeOverFlow(size_t a, size_t b);
+GroupPolicy ConvertStrategyToPolicy(const std::string &stategy);
 }  // namespace YR

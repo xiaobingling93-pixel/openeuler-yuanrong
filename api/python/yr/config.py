@@ -321,6 +321,13 @@ class FunctionGroupContext:
 
 
 @dataclass
+class GroupOptions:
+    timeout: int = -1
+    same_lifecycle: bool = True
+    strategy: str = ""
+
+
+@dataclass
 class InvokeOptions:
     """Use to set the invoke options.
 
@@ -556,6 +563,8 @@ class InvokeOptions:
     #: The scheduling timeout time of an instance. Unit: milliseconds. Value range:
     #: [-1, the maximum value of the int type]. Default value: ``30000``.
     schedule_timeout_ms: int = 30000
+
+    group_name: str = ""
 
     def check_options_valid(self):
         """

@@ -1,4 +1,6 @@
 build --action_env=BAZEL_CXXOPTS=-std=c++17
+build --action_env=GO111MODULE="on"
+build --action_env=GONOSUMDB="*"
 build --define=grpc_no_xds=true
 build --define=grpc_no_binder=true
 build --define=grpc_no_ares=true

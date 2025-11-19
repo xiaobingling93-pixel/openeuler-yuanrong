@@ -18,13 +18,7 @@
 package sts
 
 import (
-	"os"
-
-	"github.com/magiconair/properties"
-
 	"yuanrong.org/kernel/runtime/faassdk/types"
-	"yuanrong.org/kernel/runtime/libruntime/common/faas/logger"
-	"yuanrong.org/kernel/runtime/libruntime/common/logger/config"
 )
 
 // EnvSTSEnable flag

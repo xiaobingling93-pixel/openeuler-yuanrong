@@ -18,14 +18,9 @@
 package common
 
 import (
-	"encoding/json"
 	"flag"
 	"os"
 	"sync"
-
-	"github.com/magiconair/properties"
-
-	"yuanrong.org/kernel/runtime/libruntime/common/faas/logger"
 	"yuanrong.org/kernel/runtime/libruntime/common/logger/config"
 )
 
@@ -110,7 +105,6 @@ func initConfig() {
 			setConfigSingletonCfg(&configSingleton.cfg.GrpcAddress, "POSIX_LISTEN_ADDR")
 			setConfigSingletonCfg(&configSingleton.cfg.LogPath, "GLOG_log_dir")
 			setConfigSingletonCfg(&configSingleton.cfg.JobID, "YR_JOB_ID")
-			loadSTSConfig(configSingleton.path)
 			configSingleton.cfg.EnableSigaction = true
 		},
 	)

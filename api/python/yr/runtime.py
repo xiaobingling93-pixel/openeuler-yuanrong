@@ -122,12 +122,11 @@ class MSetParam:
 class CreateParam:
     """Create param."""
 
-
-    #: Configure the reliability of the data.
-    #: When the server is configured to support a secondary cache for ensuring reliability,
-    #: such as a Redis service, this configuration can ensure the reliability of the data.
-    #: Defaults to WriteMode.NONE_L2_CACHE.
-    write_mode: WriteMode = WriteMode.NONE_L2_CACHE
+    def __init__(self):
+        """
+        Initialize a CreateParam instance.
+        """
+        pass
 
     #: Data consistency configuration.
     #: In a distributed scenario, different levels of consistency semantics can be configured.
@@ -409,6 +408,48 @@ class Runtime(metaclass=ABCMeta):
         :param instance_id: instance id
         :param need_order: need order
         :return: None
+        """
+
+    @abstractmethod
+    def create_stream_producer(self, stream_name: str, config):
+        """
+        create stream producer
+        :param stream_name: stream name
+        :param config: ProducerConfig
+        :return: producer
+        """
+
+    @abstractmethod
+    def create_stream_consumer(self, stream_name: str, config):
+        """
+        create stream consumer
+        :param stream_name: stream name
+        :param config: SubscriptionConfig
+        :return: consumer
+        """
+
+    @abstractmethod
+    def delete_stream(self, stream_name: str) -> None:
+        """
+        delete stream
+        :param stream_name: stream name
+        :return: None
+        """
+
+    @abstractmethod
+    def query_global_producers_num(self, stream_name: str) -> int:
+        """
+        query global producers num
+        :param stream_name: stream name
+        :return: producers num
+        """
+
+    @abstractmethod
+    def query_global_consumers_num(self, stream_name: str) -> int:
+        """
+        query global consumers num
+        :param stream_name: stream name
+        :return: consumers num
         """
 
     @abstractmethod

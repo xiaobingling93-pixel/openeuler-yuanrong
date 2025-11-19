@@ -53,6 +53,8 @@ const int INSTANCE_PREFERRED_ANTI = 22;
 const int INSTANCE_REQUIRED = 23;
 const int INSTANCE_REQUIRED_ANTI = 24;
 const int MAX_PASSWD_LENGTH = 100;
+const int POD = 1;
+const int NODE = 2;
 
 inline jfieldID GetJStaticField(JNIEnv *env, const jclass &clz, const std::string &fieldName, const std::string &sig)
 {
@@ -108,8 +110,7 @@ void JNILibruntimeException::Throw(JNIEnv *env, const YR::Libruntime::ErrorCode 
                                    const YR::Libruntime::ModuleCode &moduleCode, const std::string &msg)
 {
     jmethodID constructorId = env->GetMethodID(
-        clz_, "<init>",
-        "(Lcom/yuanrong/errorcode/ErrorCode;Lcom/yuanrong/errorcode/ModuleCode;Ljava/lang/String;)V");
+        clz_, "<init>", "(Lcom/yuanrong/errorcode/ErrorCode;Lcom/yuanrong/errorcode/ModuleCode;Ljava/lang/String;)V");
 
     jobject jerrorCode = JNIErrorCode::FromCc(env, errorCode);
     if (jerrorCode == nullptr) {
@@ -130,6 +131,9 @@ void JNILibruntimeException::Throw(JNIEnv *env, const YR::Libruntime::ErrorCode 
 
     jthrowable exception = (jthrowable)env->NewObject(clz_, constructorId, jerrorCode, jmoduleCode, jmessage);
     env->Throw(exception);
+    env->DeleteLocalRef(jerrorCode);
+    env->DeleteLocalRef(jmoduleCode);
+    env->DeleteLocalRef(jmessage);
 }
 
 void JNIString::Init(JNIEnv *env) {}
@@ -169,6 +173,25 @@ std::unordered_set<std::string> JNIString::FromJArrayToUnorderedSet(JNIEnv *env,
     return YR::jni::JNIUnorderedSet::FromJava<std::string>(env, objs, [](JNIEnv *e, jobject obj) -> std::string {
         return YR::jni::JNIString::FromJava(e, static_cast<jstring>(obj));
     });
+}
+
+void JNIFloat::Init(JNIEnv *env)
+{
+    clz_ = LoadClass(env, "java/lang/Float");
+    jmInit_ = env->GetMethodID(clz_, "<init>", "(F)V");
+}
+
+void JNIFloat::Recycle(JNIEnv *env)
+{
+    if (clz_) {
+        env->DeleteGlobalRef(clz_);
+    }
+}
+
+jobject JNIFloat::FromCc(JNIEnv *env, const float &arg)
+{
+    float val = arg;
+    return env->NewObject(clz_, jmInit_, val);
 }
 
 void JNIList::Init(JNIEnv *env)
@@ -254,8 +277,10 @@ std::string JNIApacheCommonsExceptionUtils::GetStackTrace(JNIEnv *env, jthrowabl
     env->ReleaseStringUTFChars(jst, cstr);
     if (env->ExceptionOccurred()) {
         YRLOG_ERROR("Exception occurred when convert exception info to C string.");
+        env->DeleteLocalRef(jst);
         return "exception occurred when convert exception info to C string";
     }
+    env->DeleteLocalRef(jst);
     return result;
 }
 
@@ -346,8 +371,8 @@ void JNIInvokeType::Init(JNIEnv *env)
 {
     clz_ = LoadClass(env, "com/yuanrong/libruntime/generated/Libruntime$InvokeType");
     jmGetNumber_ = GetJMethod(env, clz_, "getNumber", "()I");
-    jmForNumber_ = GetStaticMethodID(env, clz_, "forNumber",
-                                     "(I)Lcom/yuanrong/libruntime/generated/Libruntime$InvokeType;");
+    jmForNumber_ =
+        GetStaticMethodID(env, clz_, "forNumber", "(I)Lcom/yuanrong/libruntime/generated/Libruntime$InvokeType;");
 }
 
 void JNIInvokeType::Recycle(JNIEnv *env)
@@ -372,8 +397,8 @@ void JNILanguageType::Init(JNIEnv *env)
 {
     clz_ = LoadClass(env, "com/yuanrong/libruntime/generated/Libruntime$LanguageType");
     jmGetNumber_ = GetJMethod(env, clz_, "getNumber", "()I");
-    jmForNumber_ = GetStaticMethodID(env, clz_, "forNumber",
-                                     "(I)Lcom/yuanrong/libruntime/generated/Libruntime$LanguageType;");
+    jmForNumber_ =
+        GetStaticMethodID(env, clz_, "forNumber", "(I)Lcom/yuanrong/libruntime/generated/Libruntime$LanguageType;");
 }
 
 void JNILanguageType::Recycle(JNIEnv *env)
@@ -461,8 +486,7 @@ void JNICodeExecutor::Init(JNIEnv *env)
         env, clz_, "execute",
         "(Lcom/yuanrong/libruntime/generated/Libruntime$FunctionMeta;Lcom/yuanrong/libruntime/generated/"
         "Libruntime$InvokeType;Ljava/util/List;)Lcom/yuanrong/executor/ReturnType;");
-    jmDumpInstance_ =
-        GetStaticMethodID(env, clz_, "dumpInstance", "(Ljava/lang/String;)Lcom/yuanrong/errorcode/Pair;");
+    jmDumpInstance_ = GetStaticMethodID(env, clz_, "dumpInstance", "(Ljava/lang/String;)Lcom/yuanrong/errorcode/Pair;");
 
     jmLoadInstance_ = GetStaticMethodID(env, clz_, "loadInstance", "([B[B)V");
 
@@ -582,8 +606,8 @@ YR::Libruntime::ErrorInfo JNICodeExecutor::DumpInstance(JNIEnv *env, const std::
     size_t clzNameSize = env->GetArrayLength(clzNameBytes);
     // data buffer format: [uint_8(size of buf1)|buf1(instanceBuf)|buf2(clsName)]
     // nativeBuffer is the combination of instanceBuf and clsName
-    if (instanceBufSize > (std::numeric_limits<size_t>::max() - sizeof(size_t))
-        || (sizeof(size_t) + instanceBufSize) > (std::numeric_limits<size_t>::max() - clzNameSize)) {
+    if (instanceBufSize > (std::numeric_limits<size_t>::max() - sizeof(size_t)) ||
+        (sizeof(size_t) + instanceBufSize) > (std::numeric_limits<size_t>::max() - clzNameSize)) {
         return YR::Libruntime::ErrorInfo(YR::Libruntime::ErrorCode::ERR_PARAM_INVALID,
                                          "nativeBufferSize exceeds maximum allowed size");
     }
@@ -677,6 +701,7 @@ void JNILibRuntimeConfig::Init(JNIEnv *env)
     jmGetRuntimePrivateKeyContextPath_ =
         GetJMethod(env, clz_, "getRuntimePrivateKeyContextPath", "()Ljava/lang/String;");
     jmGetVerifyFilePath_ = GetJMethod(env, clz_, "getVerifyFilePath", "()Ljava/lang/String;");
+    jmGetPrivateKeyPaaswd_ = GetJMethod(env, clz_, "getPrivateKeyPaaswd", "()Ljava/lang/String;");
     jmGetServerName_ = GetJMethod(env, clz_, "getServerName", "()Ljava/lang/String;");
     jmGetFunctionSystemIpAddr_ = GetJMethod(env, clz_, "getFunctionSystemIpAddr", "()Ljava/lang/String;");
     jmGetFunctionSystemPort_ = GetJMethod(env, clz_, "getFunctionSystemPort", "()I");
@@ -701,6 +726,8 @@ void JNILibRuntimeConfig::Init(JNIEnv *env)
     jmGetMaxConcurrencyCreateNum_ = GetJMethod(env, clz_, "getMaxConcurrencyCreateNum", "()I");
     jmGetThreadPoolSize_ = GetJMethod(env, clz_, "getThreadPoolSize", "()I");
     jmGetLoadPaths_ = GetJMethod(env, clz_, "getLoadPaths", "()Ljava/util/List;");
+    jGetHttpIocThreadsNum_ = GetJMethod(env, clz_, "getHttpIocThreadsNum", "()I");
+    jGetHttpIdleTime_ = GetJMethod(env, clz_, "getHttpIdleTime", "()I");
     jGetRpcTimeout_ = GetJMethod(env, clz_, "getRpcTimeout", "()I");
     jGetTenantId_ = GetJMethod(env, clz_, "getTenantId", "()Ljava/lang/String;");
     jGetNs_ = GetJMethod(env, clz_, "getNs", "()Ljava/lang/String;");
@@ -781,7 +808,19 @@ YR::Libruntime::LibruntimeConfig JNILibRuntimeConfig::FromJava(JNIEnv *env, cons
         [](JNIEnv *env, const jobject &vo) -> std::string {
             return JNIString::FromJava(env, static_cast<jstring>(vo));
         });
+
+    jstring jStrPasswd = static_cast<jstring>(env->CallObjectMethod(meta, jmGetPrivateKeyPaaswd_));
+    if (jStrPasswd != nullptr) {
+        const char *passwd = env->GetStringUTFChars(jStrPasswd, nullptr);
+        if (passwd != nullptr) {
+            size_t passwdLen = strlen(passwd) + 1;
+            memcpy_s(libConfig.privateKeyPaaswd, passwdLen, passwd, passwdLen);
+            env->ReleaseStringUTFChars(jStrPasswd, passwd);
+        }
+    }
     libConfig.inCluster = static_cast<bool>(env->CallBooleanMethod(meta, jmIsInCluster_));
+    libConfig.httpIocThreadsNum = static_cast<uint32_t>(env->CallIntMethod(meta, jGetHttpIocThreadsNum_));
+    libConfig.httpIdleTime = env->CallIntMethod(meta, jGetHttpIdleTime_);
     libConfig.rpcTimeout = static_cast<uint32_t>(env->CallIntMethod(meta, jGetRpcTimeout_));
 
     auto codePath = JNIList::FromJava<std::string>(
@@ -826,6 +865,37 @@ std::unordered_map<K, V> JNIMap::FromJava(JNIEnv *env, const jobject &jmap,
         cmap.emplace(e);
     }
     return cmap;
+}
+
+void JNIHashMap::Init(JNIEnv *env)
+{
+    clz_ = LoadClass(env, "java/util/HashMap");
+    init_ = GetJMethod(env, clz_, "<init>", "()V");
+    jmPut_ = GetJMethod(env, clz_, "put", "(Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;");
+}
+
+void JNIHashMap::Recycle(JNIEnv *env)
+{
+    if (clz_) {
+        env->DeleteGlobalRef(clz_);
+    }
+}
+
+template <typename K, typename V>
+jobject JNIHashMap::FromCc(JNIEnv *env, const std::unordered_map<K, V> &map,
+                           std::function<jobject(JNIEnv *, const K &)> converterK,
+                           std::function<jobject(JNIEnv *, const V &)> converterV)
+{
+    jobject hashMap = env->NewObject(clz_, init_);
+    for (const auto &kv : map) {
+        auto tmpKey = converterK(env, kv.first);
+        auto tmpValue = converterV(env, kv.second);
+        env->CallObjectMethod(hashMap, jmPut_, tmpKey, tmpValue);
+
+        env->DeleteLocalRef(tmpKey);
+        env->DeleteLocalRef(tmpValue);
+    }
+    return hashMap;
 }
 
 void JNISet::Init(JNIEnv *env)
@@ -1479,7 +1549,7 @@ jobject JNIErrorCode::FromCc(JNIEnv *env, const YR::Libruntime::ErrorCode &error
     };
 
     if (auto it = fieldMap.find(errorCode); it == fieldMap.end()) {
-        YRLOG_ERROR("Failed to match errorcode, code: ", errorCode);
+        YRLOG_ERROR("Failed to match errorcode, code: ", fmt::underlying(errorCode));
         return nullptr;
     }
     return env->NewObject(clz_, jfInitWithInt_, static_cast<jint>(fieldMap[errorCode]));
@@ -1605,6 +1675,7 @@ void JNIAffinity::Init(JNIEnv *env)
     clz_ = LoadClass(env, "com/yuanrong/affinity/Affinity");
     getValue_ = GetJMethod(env, clz_, "getAffinityValue", "()I");
     getOperators_ = GetJMethod(env, clz_, "getLabelOperators", "()Ljava/util/List;");
+    getAffinityScopeValue_ = GetJMethod(env, clz_, "getAffinityScopeValue", "()I");
 }
 
 std::shared_ptr<YR::Libruntime::Affinity> JNIAffinity::FromJava(JNIEnv *env, jobject o, bool preferredPriority,
@@ -1652,6 +1723,18 @@ std::shared_ptr<YR::Libruntime::Affinity> JNIAffinity::FromJava(JNIEnv *env, job
         affinity->SetPreferredPriority(preferredPriority);
         affinity->SetRequiredPriority(requiredPriority);
         affinity->SetPreferredAntiOtherLabels(preferredAntiOtherLabels);
+    }
+    int affinityScope = static_cast<int>(env->CallIntMethod(o, getAffinityScopeValue_));
+    switch (affinityScope) {
+        case POD:
+            affinity->SetAffinityScope(YR::Libruntime::AFFINITYSCOPE_POD);
+            break;
+        case NODE:
+            affinity->SetAffinityScope(YR::Libruntime::AFFINITYSCOPE_NODE);
+            break;
+        default:
+            YRLOG_DEBUG("affinityScope is not set.");
+            break;
     }
     return affinity;
 }
@@ -1739,8 +1822,7 @@ void JNIWriteMode::Init(JNIEnv *env)
 {
     clz_ = LoadClass(env, "com/yuanrong/WriteMode");
     j_field_NONE_L2_CACHE_ = GetJStaticField(env, clz_, "NONE_L2_CACHE", "Lcom/yuanrong/WriteMode;");
-    j_field_WRITE_THROUGH_L2_CACHE_ =
-        GetJStaticField(env, clz_, "WRITE_THROUGH_L2_CACHE", "Lcom/yuanrong/WriteMode;");
+    j_field_WRITE_THROUGH_L2_CACHE_ = GetJStaticField(env, clz_, "WRITE_THROUGH_L2_CACHE", "Lcom/yuanrong/WriteMode;");
     j_field_WRITE_BACK_L2_CACHE_ = GetJStaticField(env, clz_, "WRITE_BACK_L2_CACHE", "Lcom/yuanrong/WriteMode;");
 
     j_object_field_NONE_L2_CACHE_ = GetJStaticObjectField(env, clz_, j_field_NONE_L2_CACHE_);
@@ -1950,7 +2032,6 @@ YR::Libruntime::CacheType JNIMSetParam::GetCacheType(JNIEnv *env, jobject o)
 void JNICreateParam::Init(JNIEnv *env)
 {
     clz_ = LoadClass(env, "com/yuanrong/CreateParam");
-    jGetWriteMode_ = GetJMethod(env, clz_, "getWriteMode", "()Lcom/yuanrong/WriteMode;");
     jGetConsistencyType_ = GetJMethod(env, clz_, "getConsistencyType", "()Lcom/yuanrong/ConsistencyType;");
     jGetCacheType_ = GetJMethod(env, clz_, "getCacheType", "()Lcom/yuanrong/CacheType;");
 }
@@ -1961,7 +2042,6 @@ YR::Libruntime::CreateParam JNICreateParam::FromJava(JNIEnv *env, jobject o)
     RETURN_IF_NULL(o, createParam);
 
     return YR::Libruntime::CreateParam{
-        .writeMode = GetWriteMode(env, o),
         .consistencyType = GetConsistencyType(env, o),
         .cacheType = GetCacheType(env, o),
     };
@@ -1973,12 +2053,6 @@ void JNICreateParam::Recycle(JNIEnv *env)
         env->DeleteGlobalRef(clz_);
         clz_ = nullptr;
     }
-}
-
-YR::Libruntime::WriteMode JNICreateParam::GetWriteMode(JNIEnv *env, jobject o)
-{
-    jobject writeMode = env->CallObjectMethod(o, JNICreateParam::jGetWriteMode_);
-    return JNIWriteMode::FromJava(env, writeMode);
 }
 
 YR::Libruntime::ConsistencyType JNICreateParam::GetConsistencyType(JNIEnv *env, jobject o)
@@ -2080,8 +2154,13 @@ jobject JNIInternalWaitResult::FromCc(JNIEnv *env, const std::shared_ptr<YR::Int
         jstring key = JNIString::FromCc(env, it->first);
         jobject err = JNIErrorInfo::FromCc(env, it->second);
         env->CallObjectMethod(jmap, mPut_, key, err);
+        env->DeleteLocalRef(key);
+        env->DeleteLocalRef(err);
     }
     jobject internalWaitRes = env->NewObject(clz_, init_, jreadyList, junreadyList, jmap);
+    env->DeleteLocalRef(jreadyList);
+    env->DeleteLocalRef(junreadyList);
+    env->DeleteLocalRef(jmap);
     return internalWaitRes;
 }
 
@@ -2140,11 +2219,16 @@ void JNIYRAutoInitInfo::Recycle(JNIEnv *env)
 
 jobject JNIYRAutoInitInfo::FromCc(JNIEnv *env, YR::Libruntime::ClusterAccessInfo info)
 {
-    jobject yrAutoInitInfo = env->NewObject(clz_, init_, env->NewStringUTF(info.serverAddr.c_str()),
-                                            env->NewStringUTF(info.dsAddr.c_str()), info.inCluster);
+    jstring jServerAddr = env->NewStringUTF(info.serverAddr.c_str());
+    jstring jDsAddr = env->NewStringUTF(info.dsAddr.c_str());
+
+    jobject yrAutoInitInfo = env->NewObject(clz_, init_, jServerAddr, jDsAddr, info.inCluster);
     if (yrAutoInitInfo == nullptr) {
         YRLOG_WARN("Failed to create Java object of com/yuanrong/jni/YRAutoInitInfo");
     }
+
+    env->DeleteLocalRef(jServerAddr);
+    env->DeleteLocalRef(jDsAddr);
     return yrAutoInitInfo;
 }
 
@@ -2296,6 +2380,148 @@ int JNIFunctionLog::GetErrorCode(JNIEnv *env, jobject obj)
 {
     jint value = static_cast<jint>(env->CallIntMethod(obj, jmGetErrorCode_));
     int result = static_cast<int>(value);
+    return result;
+}
+
+void JNIProducerConfig::Init(JNIEnv *env)
+{
+    clz_ = LoadClass(env, "com/yuanrong/stream/ProducerConfig");
+    jmGetDelayFlushTimeMs_ = GetJMethod(env, clz_, "getDelayFlushTimeMs", "()J");
+    jmGetPageSizeByte_ = GetJMethod(env, clz_, "getPageSizeByte", "()J");
+    jmGetMaxStreamSize_ = GetJMethod(env, clz_, "getMaxStreamSize", "()J");
+    jmGetAutoCleanup_ = GetJMethod(env, clz_, "isAutoCleanup", "()Z");
+    jmGetEncryptStream_ = GetJMethod(env, clz_, "isEncryptStream", "()Z");
+    jmGetRetainForNumConsumers_ = GetJMethod(env, clz_, "getRetainForNumConsumers", "()J");
+    jmGetReserveSize_ = GetJMethod(env, clz_, "getReserveSize", "()J");
+    jmGetExtendConfig_ = GetJMethod(env, clz_, "getExtendConfig", "()Ljava/util/Map;");
+}
+
+void JNIProducerConfig::Recycle(JNIEnv *env)
+{
+    if (clz_) {
+        env->DeleteGlobalRef(clz_);
+    }
+}
+
+YR::Libruntime::ProducerConf JNIProducerConfig::FromJava(JNIEnv *env, jobject obj)
+{
+    YR::Libruntime::ProducerConf producerConf;
+    producerConf.delayFlushTime = GetDelayFlushTimeMs(env, obj);
+    producerConf.pageSize = GetPageSizeByte(env, obj);
+    producerConf.maxStreamSize = GetMaxStreamSize(env, obj);
+    producerConf.autoCleanup = GetAutoCleanup(env, obj);
+    producerConf.encryptStream = GetEncryptStream(env, obj);
+    producerConf.retainForNumConsumers = GetRetainForNumConsumers(env, obj);
+    producerConf.reserveSize = GetReserveSize(env, obj);
+    producerConf.extendConfig = GetExtendConfig(env, obj);
+    return producerConf;
+}
+
+int64_t JNIProducerConfig::GetDelayFlushTimeMs(JNIEnv *env, jobject obj)
+{
+    jlong value = static_cast<jlong>(env->CallLongMethod(obj, jmGetDelayFlushTimeMs_));
+    int64_t result = static_cast<int64_t>(value);
+    return result;
+}
+
+int64_t JNIProducerConfig::GetPageSizeByte(JNIEnv *env, jobject obj)
+{
+    jlong value = static_cast<jlong>(env->CallLongMethod(obj, jmGetPageSizeByte_));
+    int64_t result = static_cast<int64_t>(value);
+    return result;
+}
+
+uint64_t JNIProducerConfig::GetMaxStreamSize(JNIEnv *env, jobject obj)
+{
+    jlong value = static_cast<jlong>(env->CallLongMethod(obj, jmGetMaxStreamSize_));
+    uint64_t result = static_cast<uint64_t>(value);
+    return result;
+}
+
+bool JNIProducerConfig::GetAutoCleanup(JNIEnv *env, jobject obj)
+{
+    jboolean value = static_cast<jboolean>(env->CallBooleanMethod(obj, jmGetAutoCleanup_));
+    bool result = static_cast<bool>(value);
+    return result;
+}
+
+bool JNIProducerConfig::GetEncryptStream(JNIEnv *env, jobject obj)
+{
+    jboolean value = static_cast<jboolean>(env->CallBooleanMethod(obj, jmGetEncryptStream_));
+    bool result = static_cast<bool>(value);
+    return result;
+}
+
+uint64_t JNIProducerConfig::GetRetainForNumConsumers(JNIEnv *env, jobject obj)
+{
+    jlong value = static_cast<jlong>(env->CallLongMethod(obj, jmGetRetainForNumConsumers_));
+    uint64_t result = static_cast<uint64_t>(value);
+    return result;
+}
+
+uint64_t JNIProducerConfig::GetReserveSize(JNIEnv *env, jobject obj)
+{
+    jlong value = static_cast<jlong>(env->CallLongMethod(obj, jmGetReserveSize_));
+    uint64_t result = static_cast<uint64_t>(value);
+    return result;
+}
+
+std::unordered_map<std::string, std::string> JNIProducerConfig::GetExtendConfig(JNIEnv *env, jobject obj)
+{
+    std::unordered_map<std::string, std::string> result = JNIMap::FromJava<std::string, std::string>(
+        env, env->CallObjectMethod(obj, jmGetExtendConfig_),
+        [](JNIEnv *env, const jobject &ko) -> std::string {
+            return JNIString::FromJava(env, static_cast<jstring>(ko));
+        },
+        [](JNIEnv *env, const jobject &vo) -> std::string {
+            return JNIString::FromJava(env, static_cast<jstring>(vo));
+        });
+    return result;
+}
+
+void JNINode::Init(JNIEnv *env)
+{
+    clz_ = LoadClass(env, "com/yuanrong/api/Node");
+    init_ = GetJMethod(env, clz_, "<init>", "()V");
+    jmInit_ = GetJMethod(env, clz_, "<init>", "(Ljava/lang/String;ZLjava/util/Map;Ljava/util/Map;)V");
+}
+
+void JNINode::Recycle(JNIEnv *env)
+{
+    if (clz_) {
+        env->DeleteGlobalRef(clz_);
+    }
+}
+
+jobject JNINode::GetResourcesFromResourceUnit(JNIEnv *env, const YR::Libruntime::ResourceUnit &resourceUnit)
+{
+    return JNIHashMap::FromCc<std::string, float>(
+        env, resourceUnit.capacity, [](JNIEnv *env, const std::string &key) { return env->NewStringUTF(key.c_str()); },
+        [](JNIEnv *env, const float &value) { return JNIFloat::FromCc(env, value); });
+}
+
+jobject JNINode::GetLabelsFromResourceUnit(JNIEnv *env, const YR::Libruntime::ResourceUnit &resourceUnit)
+{
+    return JNIHashMap::FromCc<std::string, std::vector<std::string>>(
+        env, resourceUnit.nodeLabels,
+        [](JNIEnv *env, const std::string &key) { return env->NewStringUTF(key.c_str()); },
+        [](JNIEnv *env, const std::vector<std::string> &value) {
+            return JNIArrayList::FromCc<std::string>(
+                env, value, [](JNIEnv *env, const std::string &s) { return env->NewStringUTF(s.c_str()); });
+        });
+}
+
+jobject JNINode::FromCc(JNIEnv *env, const YR::Libruntime::ResourceUnit &resourceUnit)
+{
+    jstring jId = JNIString::FromCc(env, resourceUnit.id);
+    jboolean jAlive = (resourceUnit.status == 0) ? JNI_TRUE : JNI_FALSE;
+    jobject jResources = JNINode::GetResourcesFromResourceUnit(env, resourceUnit);
+    jobject jLabels = JNINode::GetLabelsFromResourceUnit(env, resourceUnit);
+    jobject result = env->NewObject(clz_, jmInit_, jId, jAlive, jResources, jLabels);
+
+    env->DeleteLocalRef(jId);
+    env->DeleteLocalRef(jResources);
+    env->DeleteLocalRef(jLabels);
     return result;
 }
 }  // namespace jni

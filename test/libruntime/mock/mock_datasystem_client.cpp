@@ -22,15 +22,100 @@
 
 #define private public
 #include "datasystem/hetero_client.h"
-#include "datasystem/object_client.h"
 #include "datasystem/kv_client.h"
+#include "datasystem/object_client.h"
+#include "datasystem/stream_client.h"
 
 namespace datasystem {
-class ThreadPool {
-};
+class ThreadPool {};
 
-class ObjectClientImpl {
-};
+class StreamClientImpl {};
+StreamClient::StreamClient(ConnectionOpts options) {}
+
+Status StreamClient::Init(bool reportWorkerLost)
+{
+    return Status::OK();
+}
+
+Status StreamClient::CreateProducer(const std::string &streamName, std::shared_ptr<Producer> &outProducer,
+                                    ProducerConf producerConf)
+{
+    return Status::OK();
+}
+
+Status StreamClient::Subscribe(const std::string &streamName, const struct SubscriptionConfig &config,
+                               std::shared_ptr<Consumer> &outConsumer, bool autoAck)
+{
+    // autoAck default is false
+    return Status::OK();
+}
+
+Status StreamClient::DeleteStream(const std::string &streamName)
+{
+    return Status::OK();
+}
+
+Status StreamClient::QueryGlobalProducersNum(const std::string &streamName, uint64_t &gProducerNum)
+{
+    return Status::OK();
+}
+
+Status StreamClient::QueryGlobalConsumersNum(const std::string &streamName, uint64_t &gConsumerNum)
+{
+    return Status::OK();
+}
+
+Status StreamClient::ShutDown()
+{
+    return Status::OK();
+}
+
+Status Producer::Send(const Element &element)
+{
+    return Status::OK();
+}
+
+Status Producer::Send(const Element &element, int64_t timeoutMs)
+{
+    return Status::OK();
+}
+
+Status Producer::Close()
+{
+    return Status::OK();
+}
+
+Status Consumer::Receive(uint32_t expectNum, uint32_t timeoutMs, std::vector<Element> &outElements)
+{
+    Element element = {.ptr = nullptr, .size = sizeof(int), .id = ULONG_MAX};
+    outElements.emplace_back(element);
+    if (expectNum == 999) {
+        for (int i = 1; i < 999; ++i) {
+            Element element = {.ptr = nullptr, .size = 100, .id = ULONG_MAX};
+            outElements.emplace_back(element);
+        }
+    }
+    return Status::OK();
+}
+
+Status Consumer::Receive(uint32_t timeoutMs, std::vector<Element> &outElements)
+{
+    Element element = {.ptr = nullptr, .size = sizeof(int), .id = ULONG_MAX};
+    outElements.emplace_back(element);
+    return Status::OK();
+}
+
+Status Consumer::Close()
+{
+    return Status::OK();
+}
+
+Status Consumer::Ack(uint64_t elementId)
+{
+    return Status::OK();
+}
+
+class ObjectClientImpl {};
 
 ObjectClient::ObjectClient(const ConnectOptions &connectOptions) {}
 
@@ -92,7 +177,12 @@ int ObjectClient::QueryGlobalRefNum(const std::string &id)
     return 1;
 }
 
-Status ObjectClient::GenerateObjectKey(const std::string &prefix, std::string &key)
+Status ObjectClient::ReleaseGRefs(const std::string &remoteClientId)
+{
+    return Status::OK();
+}
+
+Status ObjectClient::GenerateKey(const std::string &prefix, std::string &key)
 {
     key = prefix;
     return Status::OK();
@@ -163,10 +253,9 @@ Status Buffer::Publish(const std::unordered_set<std::string> &nestedIds)
     return Status::OK();
 }
 
-class StateClientImpl {
-};
+class KVClientImpl {};
 
-KVClient::KVClient(const ConnectOptions &connectOptions){};
+KVClient::KVClient(const ConnectOptions &connectOptions) {};
 
 Status KVClient::Init()
 {
@@ -192,9 +281,9 @@ std::string KVClient::Set(const StringView &val, const SetParam &setParam)
     return "returnKey";
 }
 
-Status KVClient::GenerateKey(const std::string &prefixKey, std::string &key)
+std::string KVClient::GenerateKey(const std::string &prefixKey)
 {
-    return Status::OK();
+    return "genKey";
 }
 
 Status KVClient::Get(const std::string &key, std::string &val, int32_t timeoutMs)
@@ -207,7 +296,7 @@ Status KVClient::Get(const std::string &key, std::string &val, int32_t timeoutMs
 }
 
 Status KVClient::Get(const std::vector<std::string> &keys, std::vector<Optional<ReadOnlyBuffer>> &readOnlyBuffers,
-                        int32_t timeoutMs)
+                     int32_t timeoutMs)
 {
     // To test the if branch of partial get,
     // if a vector of len = 1, successfully get
@@ -258,7 +347,20 @@ Status KVClient::Del(const std::vector<std::string> &keys, std::vector<std::stri
     return Status::OK();
 }
 
+Status KVClient::Exist(const std::vector<std::string> &keys, std::vector<bool> &exists)
+{
+    if (keys.empty()) {
+        return Status(StatusCode::K_INVALID, "The keys are empty");
+    }
+    return Status::OK();
+}
+
 Status KVClient::ShutDown()
+{
+    return Status::OK();
+}
+
+Status KVClient::HealthCheck()
 {
     return Status::OK();
 }
@@ -320,8 +422,7 @@ Buffer::Buffer(Buffer &&other) noexcept {}
 
 Buffer::~Buffer() {}
 
-class HeteroClientImpl {
-};
+class HeteroClientImpl {};
 
 HeteroClient::HeteroClient(const ConnectOptions &connectOptions) {}
 
@@ -337,18 +438,19 @@ Status HeteroClient::ShutDown()
     return Status::OK();
 }
 
-Status HeteroClient::MGetH2D(const std::vector<std::string> &keys, const std::vector<DeviceBlobList> &devBlobList,
-                          std::vector<std::string> &failedKeys, int32_t subTimeoutMs)
+Status HeteroClient::MGetH2D(const std::vector<std::string> &objectIds, const std::vector<DeviceBlobList> &devBlobList,
+                             std::vector<std::string> &failList, int32_t timeoutMs)
 {
     return Status::OK();
 }
 
-Status HeteroClient::Delete(const std::vector<std::string> &objectIds, std::vector<std::string> &failedObjectIds)
+Status HeteroClient::DevDelete(const std::vector<std::string> &objectIds, std::vector<std::string> &failedObjectIds)
 {
     return Status::OK();
 }
 
-Status HeteroClient::DevLocalDelete(const std::vector<std::string> &objectIds, std::vector<std::string> &failedObjectIds)
+Status HeteroClient::DevLocalDelete(const std::vector<std::string> &objectIds,
+                                    std::vector<std::string> &failedObjectIds)
 {
     return Status::OK();
 }
@@ -381,8 +483,8 @@ Status HeteroClient::DevMSet(const std::vector<std::string> &keys, const std::ve
     return Status::OK();
 }
 
-Status HeteroClient::DevMGet(const std::vector<std::string> &keys, std::vector<DeviceBlobList> &devBlobList,
-                             std::vector<std::string> &failedKeys, int32_t subTimeoutMs)
+Status HeteroClient::DevMGet(const std::vector<std::string> &keys, std::vector<DeviceBlobList> &blob2dList,
+                             std::vector<std::string> &failedKeys, int32_t timeoutMs)
 {
     return Status::OK();
 }

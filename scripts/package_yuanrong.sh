@@ -49,10 +49,10 @@ EOF
 function get_all(){
   echo "download datasystem functionsystem"
   if [ -n "${FUNCTION_SYSTEM_CACHE}" ]; then
-      curl -S -o functionsystem.tar.gz ${FUNCTION_SYSTEM_CACHE}
+      curl -SO ${FUNCTION_SYSTEM_CACHE}
   fi
   if [ -n "${DATA_SYSTEM_CACHE}" ]; then
-      curl -S -o datasystem.tar.gz ${DATA_SYSTEM_CACHE}
+      curl -SO ${DATA_SYSTEM_CACHE}
   fi
 }
 
@@ -70,10 +70,10 @@ cd ${OUTPUT_DIR}
 get_all
 
 tar -zxvf yr-runtime-${TAG}.tar.gz -C ${OUTPUT_DIR}/openyuanrong
-tar -zxvf functionsystem.tar.gz -C ${OUTPUT_DIR}/openyuanrong
+tar -zxvf yr-functionsystem*.tar.gz -C ${OUTPUT_DIR}/openyuanrong
 
 mkdir -p ${OUTPUT_DIR}/openyuanrong/data_system
-tar -zxvf datasystem.tar.gz -C ${OUTPUT_DIR}/openyuanrong/data_system
+tar -zxvf yr-datasystem*.tar.gz -C ${OUTPUT_DIR}/openyuanrong/data_system
 mkdir -p ${OUTPUT_DIR}/openyuanrong/data_system/deploy
 cp -fr ${BASE_DIR}/../deploy/data_system/* ${OUTPUT_DIR}/openyuanrong/data_system/deploy/
 

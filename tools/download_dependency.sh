@@ -101,7 +101,7 @@ function compile_datasystem() {
     tar -xf $ds_filename -C ${YR_DATASYSTEM_BIN_DIR}/output/
     mkdir -p ${YR_FUNCTIONSYSTEM_BIN_DIR}/datasystem/output/
     tar -xf $ds_filename -C ${YR_FUNCTIONSYSTEM_BIN_DIR}/datasystem/output/
-    cp -f ${ds_filename} $RUNTIME_OUTPUT_DIR/datasystem.tar.gz
+    cp -f ${ds_filename} $RUNTIME_OUTPUT_DIR/
 }
 
 function compile_functionsystem() {
@@ -114,7 +114,7 @@ function compile_functionsystem() {
     cd output
     tar -xf ${YR_FUNCTIONSYSTEM_BIN_DIR}/output/yr-functionsystem*.tar.gz
     cp -r ${YR_FUNCTIONSYSTEM_BIN_DIR}/output/function_system/metrics ${RUNTIME_SRC_DIR}/../
-    cp -f ${YR_FUNCTIONSYSTEM_BIN_DIR}/output/yr-functionsystem*.tar.gz $RUNTIME_OUTPUT_DIR/functionsystem.tar.gz
+    cp -f ${YR_FUNCTIONSYSTEM_BIN_DIR}/output/yr-functionsystem*.tar.gz $RUNTIME_OUTPUT_DIR/
 }
 
 function compile_all(){

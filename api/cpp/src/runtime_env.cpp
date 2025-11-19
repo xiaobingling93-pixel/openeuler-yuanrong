@@ -22,7 +22,7 @@ void RuntimeEnv::SetJsonStr(const std::string &name, const std::string &jsonStr)
 {
     try {
         nlohmann::json valueJ = nlohmann::json::parse(jsonStr);
-        fields_[name] = valueJ;
+        jsons_[name] = valueJ;
     } catch (std::exception &e) {
         throw YR::Exception::InvalidParamException("Failed to set the field " + name + " by json string: " + e.what());
     }
@@ -33,19 +33,19 @@ std::string RuntimeEnv::GetJsonStr(const std::string &name) const
     if (!Contains(name)) {
         throw YR::Exception::InvalidParamException("The field " + name + " not found.");
     }
-    auto j = fields_[name].get<nlohmann::json>();
+    auto j = jsons_[name].get<nlohmann::json>();
     return j.dump();
 }
 
 bool RuntimeEnv::Contains(const std::string &name) const
 {
-    return fields_.contains(name);
+    return jsons_.contains(name);
 }
 
 bool RuntimeEnv::Remove(const std::string &name)
 {
     if (Contains(name)) {
-        fields_.erase(name);
+        jsons_.erase(name);
         return true;
     }
     return false;

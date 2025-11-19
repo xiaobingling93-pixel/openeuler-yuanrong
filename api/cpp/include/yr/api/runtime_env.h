@@ -27,12 +27,12 @@ namespace YR {
 
 /*!
  * @class RuntimeEnv
- * @brief This class provides interfaces of setting runtime environments for python actor.
+ * @brief interfaces of setting runtime environments for python actor.
  */
 class RuntimeEnv {
 public:
     /*!
-     * @brief Set a runtime env field by name and Object.
+     * @brief Set a runtime env by name and Object.
      *
      * @tparam T The second param type of the value.
      * @param name The runtime env plugin name.
@@ -71,9 +71,9 @@ public:
     T Get(const std::string &name) const;
 
     /**
-     * @brief  Set a runtime env field by name and json string.
+     * @brief  Set a runtime env by name and json string.
      * @param name The runtime env plugin name.
-     * @param jsonStr A json string represents the runtime env field.
+     * @param jsonStr A json string represents the runtime env.
      */
     void SetJsonStr(const std::string &name, const std::string &jsonStr);
 
@@ -92,35 +92,24 @@ public:
     bool Contains(const std::string &name) const;
 
     /**
+     * @brief  Whether the runtime env is empty.
+     * @return  Whether the runtime env is empty.
+     */
+    bool Empty() const
+    {
+        return jsons_.empty();
+    }
+
+    /**
      * @brief  Remove a field by name.
      * @param name The runtime env plugin name.
      * @return true if remove an existing field, otherwise false.
      */
     bool Remove(const std::string &name);
 
-    /**
-     * @brief  Whether the runtime env is empty.
-     * @return  Whether the runtime env is empty.
-     */
-    bool Empty() const
-    {
-        return fields_.empty();
-    }
-
 private:
-    nlohmann::json fields_;
+    nlohmann::json jsons_;
 };
-
-template <typename T>
-inline void RuntimeEnv::Set(const std::string &name, const T &value)
-{
-    try {
-        nlohmann::json valueJ = value;
-        fields_[name] = valueJ;
-    } catch (std::exception &e) {
-        throw Exception::InvalidParamException("Failed to set the field " + name + ": " + e.what());
-    }
-}
 
 template <typename T>
 inline T RuntimeEnv::Get(const std::string &name) const
@@ -129,9 +118,20 @@ inline T RuntimeEnv::Get(const std::string &name) const
         throw Exception::InvalidParamException("The field " + name + " not found.");
     }
     try {
-        return fields_[name].get<T>();
+        return jsons_[name].get<T>();
     } catch (std::exception &e) {
         throw Exception::InvalidParamException("Failed to get the field " + name + ": " + e.what());
     }
 }
-} // namespace YR
+
+template <typename T>
+inline void RuntimeEnv::Set(const std::string &name, const T &value)
+{
+    try {
+        nlohmann::json valueJ = value;
+        jsons_[name] = valueJ;
+    } catch (std::exception &e) {
+        throw Exception::InvalidParamException("Failed to set the field " + name + ": " + e.what());
+    }
+}
+}  // namespace YR

@@ -60,6 +60,18 @@ function get_all(){
         curl -SO ${DATA_SYSTEM_CACHE}
       fi
   fi
+  if [ -n "${FRONTEND_CACHE}" ]; then
+      frontend_filename=$(ls *frontend*.tar.gz)
+      if [ ! -n "${frontend_filename}" ]; then
+        curl -SO ${FRONTEND_CACHE}
+      fi
+  fi
+  if [ -n "${DASHBOARD_CACHE}" ]; then
+      dashboard_filename=$(ls *dashboard*.tar.gz)
+      if [ ! -n "${dashboard_filename}" ]; then
+        curl -SO ${DASHBOARD_CACHE}
+      fi
+  fi
 }
 
 function main () {

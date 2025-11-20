@@ -155,8 +155,6 @@ export LD_LIBRARY_PATH=$PYTHON_PATH_3911/lib:$PYTHON_PATH_3102/lib:$PYTHON_PATH_
 
 export LANG=C.UTF-8
 export TMOUT=0
-export GO111MODULE=on
-export GOPROXY=https://goproxy.cn,direct
 EOF
 
 
@@ -190,7 +188,7 @@ pip3.11 install wheel==0.36.2
 # --- Configure npm ---
 export PATH="/opt/buildtools/nodejs/bin:$PATH"
 if command -v npm &> /dev/null; then
-    npm config set registry https://mirrors.huaweicloud.com/npm/
+    npm config set registry https://mirrors.huaweicloud.com/repository/npm/
     npm config set strict-ssl false
 fi
 

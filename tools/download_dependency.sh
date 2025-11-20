@@ -128,7 +128,7 @@ function compile_frontend() {
 
 function compile_dashboard() {
     cd ${YR_DASHBOARD_SRC_DIR}
-    bash build/build.sh
+    bash build.sh
 }
 
 function compile_all(){

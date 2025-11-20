@@ -20,6 +20,9 @@
       <template #logo>
         <img src="/logo.png" alt="YuanRong logo" class="yr-logo"/>
       </template>
+      <template #toolbar>
+         <p class="version">{{ config.version }}</p>
+      </template>
     </tiny-nav-menu>
     <router-view></router-view>
   </div>
@@ -29,6 +32,7 @@
 import { ref } from 'vue';
 import { TinyNavMenu } from '@opentiny/vue';
 import Logo from '@/../public/logo.png';
+import config from '@/config/config.json';
 
 const menuData = ref([
   {
@@ -76,6 +80,9 @@ const TinyIconTotal = Logo;
   height: 30px;
   margin-top: 8px;
 }
+
+.version {
+  font-weight: normal;
+  font-size: 15px;
+}
 </style>
-
-

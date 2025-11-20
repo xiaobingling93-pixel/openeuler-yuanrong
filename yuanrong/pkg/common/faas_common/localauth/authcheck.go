@@ -307,7 +307,6 @@ func getTimestampDiffLimit() float64 {
 	} else {
 		tsDiffLimit = float64(defaultTimestampDiffLimit)
 	}
-	log.GetLogger().Infof("current timestampDiffLimit is %f", tsDiffLimit)
 	return tsDiffLimit
 }
 

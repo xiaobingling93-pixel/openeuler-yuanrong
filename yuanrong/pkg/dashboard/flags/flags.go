@@ -22,6 +22,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"os"
 	"strings"
 	"time"
 
@@ -66,6 +67,8 @@ const (
 )
 
 var (
+	version     string
+	showVersion bool
 	// DashboardConfig is the global config struct
 	DashboardConfig dashboardConfig
 
@@ -169,6 +172,11 @@ func RegisterSelfToEtcd(stopCh <-chan struct{}) error {
 
 func initWithConfigFiles(cCmd *cobra.Command) {
 	cmdErr(cCmd.Execute())
+	if showVersion {
+		fmt.Println(version)
+		os.Exit(0)
+	}
+
 	if err := initLog(); err != nil {
 		log.GetLogger().Errorf("failed to init dashboard log, err: %s", err.Error())
 	}
@@ -196,6 +204,7 @@ func cobraCmd() *cobra.Command {
 	}
 
 	// if config path, use config path
+	cCmd.Flags().BoolVarP(&showVersion, "version", "v", false, "show version")
 	cCmd.Flags().StringVarP(&dashboardConfigPath, "config_path", "", "", "config file path")
 	cCmd.Flags().StringVarP(&dashboardLogConfigPath, "log_config_path", "", "", "log config file path")
 

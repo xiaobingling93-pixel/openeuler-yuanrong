@@ -15,22 +15,43 @@
 
 set -e
 
-BASE_DIR=$(cd "$(dirname "$0")"; pwd)
-PROJECT_DIR=$(cd "$(dirname "$0")"/..; pwd)
+readonly USAGE="
+Usage: bash build.sh [-h] [-v <version>]
+
+Options:
+    -v, --version show version.
+    -h show usage.
+"
+
+PROJECT_DIR=$(cd "$(dirname "$0")"; pwd)
 OUTPUT_DIR="${PROJECT_DIR}/output"
 RUNTIME_OUTPUT_DIR="${PROJECT_DIR}/../output"
 POSIX_DIR="${PROJECT_DIR}/proto/posix"
 BUILD_TAGS=""
+VERSION=""
 FLAGS='-extldflags "-fPIC -fstack-protector-strong -Wl,-z,now,-z,relro,-z,noexecstack,-s -Wall -Werror"'
 
-go install google.golang.org/protobuf/cmd/protoc-gen-go@latest
-go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@latest
+while [[ $# -gt 0 ]]; do
+    case $1 in
+        -v|--version)
+            if [ -n "$2" ] && [ "${2:0:1}" != "-" ]; then
+                VERSION="$2"
+                shift 2
+            fi
+            ;;
+      -h|--help)
+          echo -e "${USAGE}"
+          exit 0
+          ;;
+    esac
+done
 
 # go module prepare
 export GO111MODULE=on
 export GONOSUMDB=*
 export CGO_ENABLED=1
-
+go install google.golang.org/protobuf/cmd/protoc-gen-go@latest
+go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@latest
 # resolve missing go.sum entry
 go env -w "GOFLAGS"="-mod=mod"
 
@@ -41,29 +62,35 @@ echo "start to compile dashboard -s ${SCC_BUILD_ENABLED}"
 mkdir -p "${OUTPUT_DIR}/bin/"
 rm -rf "${OUTPUT_DIR}/bin/dashboard"
 
-CC='gcc -fstack-protector-strong -D_FORTIFY_SOURCE=2 -O2' go build -tags="${BUILD_TAGS}" -buildmode=pie -ldflags "${FLAGS}"  -o \
+DASHBOARD_FLAGS="${FLAGS} -X 'yuanrong/pkg/dashboard/flags.version=${VERSION}'"
+CC='gcc -fstack-protector-strong -D_FORTIFY_SOURCE=2 -O2' go build -tags="${BUILD_TAGS}" -buildmode=pie -ldflags "${DASHBOARD_FLAGS}"  -o \
 "${OUTPUT_DIR}"/bin/dashboard "${PROJECT_DIR}"/cmd/dashboard/main.go
 
 mkdir -p "${OUTPUT_DIR}/config/"
 rm -rf "${OUTPUT_DIR}/config/dashboard*"
-cp -ar "${BASE_DIR}/dashboard/config/" "${OUTPUT_DIR}/"
+cp -ar "${PROJECT_DIR}/build/dashboard/config/" "${OUTPUT_DIR}/"
 
 npm config set strict-ssl false
 echo "start to compile dashboard client"
 mkdir -p "${OUTPUT_DIR}/bin/"
 rm -rf "${OUTPUT_DIR}/bin/client"
 cd "${PROJECT_DIR}/pkg/dashboard/client"
+CLIENT_CONFIG_DIR="${PROJECT_DIR}/pkg/dashboard/client/src/config"
+rm -f "${CLIENT_CONFIG_DIR}/config.json"
+cp "${CLIENT_CONFIG_DIR}/config.json.bak" "${CLIENT_CONFIG_DIR}/config.json"
+sed -i "s#{version}#${VERSION}#g" "${CLIENT_CONFIG_DIR}/config.json"
 npm install || die "dashboard client install failed"
 npm run build || die "dashboard client build failed"
 mkdir -p "${OUTPUT_DIR}/bin/client"
 cp -ar ./dist "${OUTPUT_DIR}/bin/client/"
-cd "${BASE_DIR}"
+cd "${PROJECT_DIR}"
 
 echo "start to compile collector"
 mkdir -p "${OUTPUT_DIR}/bin/"
 rm -rf "${OUTPUT_DIR}/bin/collector"
 echo LD_LIBRARY_PATH=$LD_LIBRARY_PATH
-CC='gcc -fstack-protector-strong -D_FORTIFY_SOURCE=2 -O2' go build -tags="${BUILD_TAGS}" -buildmode=pie -ldflags "${FLAGS}"  -o \
+COLLECTOR_FLAGS="${FLAGS} -X 'yuanrong/pkg/collector/common.version=${VERSION}'"
+CC='gcc -fstack-protector-strong -D_FORTIFY_SOURCE=2 -O2' go build -tags="${BUILD_TAGS}" -buildmode=pie -ldflags "${COLLECTOR_FLAGS}"  -o \
 "${OUTPUT_DIR}"/bin/collector "${PROJECT_DIR}"/cmd/collector/main.go
 
 cd "${OUTPUT_DIR}"
@@ -71,4 +98,4 @@ tar -czvf yr-dashboard-v0.0.1.tar.gz ./*
 mkdir -p "${RUNTIME_OUTPUT_DIR}"
 rm -rf "${RUNTIME_OUTPUT_DIR}/yr-dashboard-v0.0.1.tar.gz"
 cp yr-dashboard-v0.0.1.tar.gz "${RUNTIME_OUTPUT_DIR}"
-cd "${BASE_DIR}"
+cd "${PROJECT_DIR}"

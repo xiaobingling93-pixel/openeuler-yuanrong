@@ -44,6 +44,8 @@ type CollectorConfig struct {
 }
 
 var (
+	version     string
+	showVersion bool
 	// CollectorConfigs -
 	CollectorConfigs CollectorConfig
 )
@@ -69,6 +71,10 @@ func InitCmd() {
 	if err := rootCmd.Execute(); err != nil {
 		log.GetLogger().Fatal(err.Error())
 	}
+	if showVersion {
+		fmt.Println(version)
+		os.Exit(0)
+	}
 	if err := validateCmdArgs(); err != nil {
 		log.GetLogger().Fatal(err.Error())
 	}
@@ -76,6 +82,7 @@ func InitCmd() {
 }
 
 func registerCmdArgs(rootCmd *cobra.Command) {
+	rootCmd.Flags().BoolVarP(&showVersion, "version", "v", false, "show version")
 	rootCmd.Flags().StringVarP(&CollectorConfigs.CollectorID, "collect_id", "", "",
 		"the identifier; of length less than 256")
 	rootCmd.Flags().StringVarP(&CollectorConfigs.IP, "ip", "", "", "the ip of collector for manager to access")

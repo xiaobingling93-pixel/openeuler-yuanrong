@@ -288,6 +288,7 @@ ETCD_ADDR_LIST_FOR_MASTER_INFO=""
 # ssl config
 STS_CONFIG="{}"
 SSL_BASE_PATH=""
+SCC_ENABLE="false"
 SSL_ENABLE="false"
 SSL_ROOT_FILE="ca.crt"
 SSL_CERT_FILE="module.crt"

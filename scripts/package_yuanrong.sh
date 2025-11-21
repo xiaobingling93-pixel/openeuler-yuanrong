@@ -101,6 +101,7 @@ rm -rf ${OUTPUT_DIR}/openyuanrong/deploy/data_system
 frontend_filename=$(ls *frontend*.tar.gz)
 if [ -n "${frontend_filename}" ]; then
     tar -zxvf ${frontend_filename} -C ${OUTPUT_DIR}/openyuanrong
+    cp -fr ${OUTPUT_DIR}/openyuanrong/pattern/pattern_faas/init_frontend_args.json ${OUTPUT_DIR}/openyuanrong/function_system/config/
 fi
 
 dashboard_filename=$(ls *dashboard*.tar.gz)
@@ -111,7 +112,9 @@ fi
 find . -type d -exec chmod 750 {} \;
 find . -type l -exec chmod 777 {} \;
 find . -type f -exec chmod 640 {} \;
-
+find . -type d -name bin -exec chmod -R 755 {} \;
+find . -type f -name datasystem_worker -exec chmod 755 {} \;
+find . -type f -name "etcd*" -exec chmod 550 {} \;
 if [ -d ${OUTPUT_DIR}/openyuanrong/deploy/process/ ]; then
   find ${OUTPUT_DIR}/openyuanrong/deploy/process/ -type f -exec chmod 550 {} \;
   find ${OUTPUT_DIR}/openyuanrong/deploy/process/ -type f -name "*.yaml" -exec chmod 640 {} \;

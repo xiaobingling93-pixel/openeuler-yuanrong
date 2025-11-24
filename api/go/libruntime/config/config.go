@@ -150,10 +150,7 @@ type Config struct {
 	PrimaryKeyStoreFile             string
 	StandbyKeyStoreFile             string
 	EnableDsEncrypt                 bool
-	RuntimePublicKeyContext         string
-	RuntimePrivateKeyContext        string
-	DsPublicKeyContext              string
-	EncryptRuntimePublicKeyContext  string
-	EncryptRuntimePrivateKeyContext string
-	EncryptDsPublicKeyContext       string
+	RuntimePublicKeyContextPath     string
+	RuntimePrivateKeyContextPath    string
+	DsPublicKeyContextPath          string
 }

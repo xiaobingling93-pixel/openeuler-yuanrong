@@ -27,7 +27,6 @@ import (
 	"yuanrong.org/kernel/runtime/faassdk/common/monitor"
 	"yuanrong.org/kernel/runtime/faassdk/config"
 	"yuanrong.org/kernel/runtime/faassdk/handler/http/crossclusterinvoke"
-	"yuanrong.org/kernel/runtime/faassdk/sts"
 	"yuanrong.org/kernel/runtime/faassdk/types"
 	"yuanrong.org/kernel/runtime/faassdk/utils/urnutils"
 	"yuanrong.org/kernel/runtime/libruntime/api"

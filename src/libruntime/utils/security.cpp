@@ -88,9 +88,9 @@ ErrorInfo Security::InitWithDriver(std::shared_ptr<LibruntimeConfig> librtConfig
     }
     if (librtConfig->encryptEnable) {
         this->dsConf_.encryptEnable = librtConfig->encryptEnable;
-        this->dsConf_.clientPublicKey = librtConfig->runtimePublicKey;
-        this->dsConf_.clientPrivateKey = librtConfig->runtimePrivateKey;
-        this->dsConf_.serverPublicKey = librtConfig->dsPublicKey;
+        this->dsConf_.clientPublicKey = GetValueFromFile(librtConfig->runtimePublicKeyPath);
+        this->dsConf_.clientPrivateKey = GetValueFromFile(librtConfig->runtimePrivateKeyPath);
+        this->dsConf_.serverPublicKey = GetValueFromFile(librtConfig->dsPublicKeyPath);
     }
     if (!librtConfig->ak_.empty() && !librtConfig->sk_.Empty()) {
         this->ak_ = librtConfig->ak_;

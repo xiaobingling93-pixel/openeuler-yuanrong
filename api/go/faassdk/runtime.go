@@ -71,12 +71,9 @@ func InitRuntime() error {
 		PrimaryKeyStoreFile:             conf.PrimaryKeyStoreFile,
 		StandbyKeyStoreFile:             conf.StandbyKeyStoreFile,
 		EnableDsEncrypt:                 conf.EnableDsEncrypt,
-		RuntimePublicKeyContext:         conf.RuntimePublicKeyContext,
-		RuntimePrivateKeyContext:        conf.RuntimePrivateKeyContext,
-		DsPublicKeyContext:              conf.DsPublicKeyContext,
-		EncryptRuntimePublicKeyContext:  conf.EncryptRuntimePublicKeyContext,
-		EncryptRuntimePrivateKeyContext: conf.EncryptRuntimePrivateKeyContext,
-		EncryptDsPublicKeyContext:       conf.EncryptDsPublicKeyContext,
+		RuntimePublicKeyContextPath:     conf.RuntimePublicKeyContextPath,
+		RuntimePrivateKeyContextPath:    conf.RuntimePrivateKeyContextPath,
+		DsPublicKeyContextPath:          conf.DsPublicKeyContextPath,
 	}
 	if err := libruntime.Init(runtimeConf); err != nil {
 		fmt.Printf("failed to init libruntime, error %s\n", err.Error())

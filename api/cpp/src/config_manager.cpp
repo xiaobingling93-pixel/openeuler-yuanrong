@@ -148,7 +148,6 @@ ClientInfo ConfigManager::GetClientInfo()
 void ConfigManager::ClearPasswd()
 {
     memset_s(privateKeyPaaswd, MAX_PASSWD_LENGTH, 0, MAX_PASSWD_LENGTH);
-    encryptPrivateKeyPasswd.clear();
 }
 
 void ConfigManager::Init(const Config &conf, int argc, char **argv)
@@ -169,7 +168,6 @@ void ConfigManager::Init(const Config &conf, int argc, char **argv)
         this->verifyFilePath = conf.verifyFilePath;
         int len = sizeof(conf.privateKeyPaaswd);
         memcpy_s(this->privateKeyPaaswd, len, conf.privateKeyPaaswd, len);
-        this->encryptPrivateKeyPasswd = conf.encryptPrivateKeyPasswd;
     }
     this->primaryKeyStoreFile = conf.primaryKeyStoreFile;
     this->standbyKeyStoreFile = conf.standbyKeyStoreFile;
@@ -198,12 +196,9 @@ void ConfigManager::Init(const Config &conf, int argc, char **argv)
     }
     this->enableDsEncrypt = conf.enableDsEncrypt;
     if (conf.enableDsEncrypt) {
-        this->dsPublicKeyContext = conf.dsPublicKeyContext;
-        this->runtimePublicKeyContext = conf.runtimePublicKeyContext;
-        this->runtimePrivateKeyContext = conf.runtimePrivateKeyContext;
-        this->encryptDsPublicKeyContext = conf.encryptDsPublicKeyContext;
-        this->encryptRuntimePublicKeyContext = conf.encryptRuntimePublicKeyContext;
-        this->encryptRuntimePrivateKeyContext = conf.encryptRuntimePrivateKeyContext;
+        this->dsPublicKeyContextPath = conf.dsPublicKeyContextPath;
+        this->runtimePublicKeyContextPath = conf.runtimePublicKeyContextPath;
+        this->runtimePrivateKeyContextPath = conf.runtimePrivateKeyContextPath;
     }
 
     if (conf.threadPoolSize > 0) {

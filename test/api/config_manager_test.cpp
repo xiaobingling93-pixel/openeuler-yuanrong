@@ -21,8 +21,8 @@
 #include <gtest/gtest.h>
 
 #include "api/cpp/include/yr/api/exception.h"
-#include "api/cpp/src/config_manager.h"
 #include "api/cpp/src/cluster_mode_runtime.h"
+#include "api/cpp/src/config_manager.h"
 #include "src/libruntime/err_type.h"
 #include "src/libruntime/libruntime_manager.h"
 #include "src/proto/libruntime.pb.h"
@@ -36,8 +36,8 @@ using namespace YR::utility;
 
 class ConfigManagerTest : public testing::Test {
 public:
-    ConfigManagerTest(){};
-    ~ConfigManagerTest(){};
+    ConfigManagerTest() {};
+    ~ConfigManagerTest() {};
     void SetUp() override
     {
         Mkdir("/tmp/log");
@@ -265,28 +265,6 @@ TEST_F(ConfigManagerTest, ConfigManagerInitEnableMTLSTest)
     ASSERT_EQ(conf.certificateFilePath, ConfigManager::Singleton().certificateFilePath);
     ASSERT_EQ(conf.verifyFilePath, ConfigManager::Singleton().verifyFilePath);
     ASSERT_EQ(std::string(conf.privateKeyPaaswd), std::string(ConfigManager::Singleton().privateKeyPaaswd));
-    ASSERT_EQ(conf.encryptPrivateKeyPasswd, ConfigManager::Singleton().encryptPrivateKeyPasswd);
-}
-
-TEST_F(ConfigManagerTest, ConfigManagerInitEnableDsEncryptTest)
-{
-    Config conf = GetMockConf();
-    conf.enableDsEncrypt = true;
-    conf.dsPublicKeyContext = "aaa";
-    conf.runtimePublicKeyContext = "bbb";
-    conf.runtimePrivateKeyContext = "ccc";
-    conf.encryptDsPublicKeyContext = "ddd";
-    conf.encryptRuntimePublicKeyContext = "eee";
-    conf.encryptRuntimePrivateKeyContext = "fff";
-    int mockArgc = 1;
-    char *mockArgv[] = {"--logDir=/tmp/log"};
-    ConfigManager::Singleton().Init(conf, mockArgc, mockArgv);
-    ASSERT_EQ(conf.dsPublicKeyContext, ConfigManager::Singleton().dsPublicKeyContext);
-    ASSERT_EQ(conf.runtimePublicKeyContext, ConfigManager::Singleton().runtimePublicKeyContext);
-    ASSERT_EQ(conf.runtimePrivateKeyContext, ConfigManager::Singleton().runtimePrivateKeyContext);
-    ASSERT_EQ(conf.encryptDsPublicKeyContext, ConfigManager::Singleton().encryptDsPublicKeyContext);
-    ASSERT_EQ(conf.encryptRuntimePublicKeyContext, ConfigManager::Singleton().encryptRuntimePublicKeyContext);
-    ASSERT_EQ(conf.encryptRuntimePrivateKeyContext, ConfigManager::Singleton().encryptRuntimePrivateKeyContext);
 }
 
 TEST_F(ConfigManagerTest, GetValidLogCompressTest)

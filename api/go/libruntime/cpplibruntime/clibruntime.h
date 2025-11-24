@@ -147,12 +147,9 @@ typedef struct tagCLibruntimeConfig {
     char *primaryKeyStoreFile;
     char *standbyKeyStoreFile;
     char enableDsEncrypt;
-    char *runtimePublicKeyContext;
-    char *runtimePrivateKeyContext;
-    char *dsPublicKeyContext;
-    char *encryptRuntimePublicKeyContext;
-    char *encryptRuntimePrivateKeyContext;
-    char *encryptDsPublicKeyContext;
+    char *runtimePublicKeyContextPath;
+    char *runtimePrivateKeyContextPath;
+    char *dsPublicKeyContextPath;
     int maxConcurrencyCreateNum;
     char enableSigaction;
 } CLibruntimeConfig;

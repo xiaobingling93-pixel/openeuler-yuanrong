@@ -18,12 +18,7 @@
 package common
 
 import (
-	"encoding/json"
-	"os"
 	"testing"
-
-	"github.com/agiledragon/gomonkey/v2"
-	"github.com/magiconair/properties"
 	"github.com/smartystreets/goconvey/convey"
 )
 

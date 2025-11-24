@@ -661,18 +661,12 @@ func Init(conf config.Config) error {
 	defer C.free(unsafe.Pointer(cPrimaryKeyStoreFile))
 	cStandbyKeyStoreFile := C.CString(conf.StandbyKeyStoreFile)
 	defer C.free(unsafe.Pointer(cStandbyKeyStoreFile))
-	cRuntimePublicKeyContext := C.CString(conf.RuntimePublicKeyContext)
-	defer C.free(unsafe.Pointer(cRuntimePublicKeyContext))
-	cRuntimePrivateKeyContext := C.CString(conf.RuntimePrivateKeyContext)
-	defer C.free(unsafe.Pointer(cRuntimePrivateKeyContext))
-	cDsPublicKeyContext := C.CString(conf.DsPublicKeyContext)
-	defer C.free(unsafe.Pointer(cDsPublicKeyContext))
-	cEncryptRuntimePublicKeyContext := C.CString(conf.EncryptRuntimePublicKeyContext)
-	defer C.free(unsafe.Pointer(cEncryptRuntimePublicKeyContext))
-	cEncryptRuntimePrivateKeyContext := C.CString(conf.EncryptRuntimePrivateKeyContext)
-	defer C.free(unsafe.Pointer(cEncryptRuntimePrivateKeyContext))
-	cEncryptDsPublicKeyContext := C.CString(conf.EncryptDsPublicKeyContext)
-	defer C.free(unsafe.Pointer(cEncryptDsPublicKeyContext))
+	cRuntimePublicKeyContextPath := C.CString(conf.RuntimePublicKeyContextPath)
+	defer C.free(unsafe.Pointer(cRuntimePublicKeyContextPath))
+	cRuntimePrivateKeyContextPath := C.CString(conf.RuntimePrivateKeyContextPath)
+	defer C.free(unsafe.Pointer(cRuntimePrivateKeyContextPath))
+	cDsPublicKeyContextPath := C.CString(conf.DsPublicKeyContextPath)
+	defer C.free(unsafe.Pointer(cDsPublicKeyContextPath))
 	cMaxConcurrencyCreateNum := C.int(conf.MaxConcurrencyCreateNum)
 
 	cFunctionId := C.CString(conf.FunctionId)
@@ -703,12 +697,9 @@ func Init(conf config.Config) error {
 		primaryKeyStoreFile:             cPrimaryKeyStoreFile,
 		standbyKeyStoreFile:             cStandbyKeyStoreFile,
 		enableDsEncrypt:                 C.char(btoi(conf.EnableDsEncrypt)),
-		runtimePublicKeyContext:         cRuntimePublicKeyContext,
-		runtimePrivateKeyContext:        cRuntimePrivateKeyContext,
-		dsPublicKeyContext:              cDsPublicKeyContext,
-		encryptRuntimePublicKeyContext:  cEncryptRuntimePublicKeyContext,
-		encryptRuntimePrivateKeyContext: cEncryptRuntimePrivateKeyContext,
-		encryptDsPublicKeyContext:       cEncryptDsPublicKeyContext,
+		runtimePublicKeyContextPath:     cRuntimePublicKeyContextPath,
+		runtimePrivateKeyContextPath:    cRuntimePrivateKeyContextPath,
+		dsPublicKeyContextPath:          cDsPublicKeyContextPath,
 		maxConcurrencyCreateNum:         cMaxConcurrencyCreateNum,
 		enableSigaction:                 C.char(btoi(conf.EnableSigaction)),
 	}

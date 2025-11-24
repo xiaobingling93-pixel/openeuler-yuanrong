@@ -481,9 +481,6 @@ TEST_F(CLibruntimeTest, CInitTest)
         "RuntimePublicKeyContext",
         "RuntimePrivateKeyContext",
         "DsPublicKeyContext",
-        "EncryptRuntimePublicKeyContext",
-        "EncryptRuntimePrivateKeyContext",
-        "EncryptDsPublicKeyContext",
     };
     auto cErr = CInit(&config);
     ASSERT_TRUE(cErr.code == 0);

@@ -29,8 +29,7 @@
 namespace datasystem {
 class ThreadPool {};
 
-class StreamClientImpl {};
-StreamClient::StreamClient(ConnectionOpts options) {}
+StreamClient::StreamClient(ConnectOptions options) {}
 
 Status StreamClient::Init(bool reportWorkerLost)
 {

@@ -60,12 +60,9 @@ type Configuration struct {
 	PrimaryKeyStoreFile             string
 	StandbyKeyStoreFile             string
 	EnableDsEncrypt                 bool
-	RuntimePublicKeyContext         string
-	RuntimePrivateKeyContext        string
-	DsPublicKeyContext              string
-	EncryptRuntimePublicKeyContext  string
-	EncryptRuntimePrivateKeyContext string
-	EncryptDsPublicKeyContext       string
+	RuntimePublicKeyContextPath     string
+	RuntimePrivateKeyContextPath    string
+	DsPublicKeyContextPath          string
 	MaxConcurrencyCreateNum         int
 	EnableSigaction                 bool
 }
@@ -92,9 +89,6 @@ func initConfig() {
 			flag.StringVar(&configSingleton.cfg.PrimaryKeyStoreFile, "primaryKeyStoreFile", "", "")
 			flag.StringVar(&configSingleton.cfg.StandbyKeyStoreFile, "standbyKeyStoreFile", "", "")
 			flag.BoolVar(&configSingleton.cfg.EnableDsEncrypt, "enableDsEncrypt", false, "")
-			flag.StringVar(&configSingleton.cfg.EncryptRuntimePublicKeyContext, "encryptRuntimePublicKeyContext", "", "")
-			flag.StringVar(&configSingleton.cfg.EncryptRuntimePrivateKeyContext, "encryptRuntimePrivateKeyContext", "", "")
-			flag.StringVar(&configSingleton.cfg.EncryptDsPublicKeyContext, "encryptDsPublicKeyContext", "", "")
 			flag.IntVar(&configSingleton.cfg.MaxConcurrencyCreateNum, "maxConcurrencyCreateNum",
 				defaultMaxConcurrencyCreateNum, "")
 			flag.Parse()

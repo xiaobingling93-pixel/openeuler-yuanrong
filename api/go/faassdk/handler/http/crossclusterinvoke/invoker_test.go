@@ -18,25 +18,19 @@
 package crossclusterinvoke
 
 import (
-	"encoding/base64"
-	"encoding/json"
 	"errors"
 	"fmt"
 	"os"
 	"reflect"
-	"strings"
 	"sync"
 	"testing"
-	"time"
 
 	"github.com/agiledragon/gomonkey/v2"
 	"github.com/smartystreets/goconvey/convey"
 	"github.com/valyala/fasthttp"
 	
 	"yuanrong.org/kernel/runtime/faassdk/common/constants"
-	"yuanrong.org/kernel/runtime/faassdk/sts"
 	"yuanrong.org/kernel/runtime/faassdk/types"
-	"yuanrong.org/kernel/runtime/faassdk/utils/signer"
 	"yuanrong.org/kernel/runtime/faassdk/utils/urnutils"
 	"yuanrong.org/kernel/runtime/libruntime/api"
 	log "yuanrong.org/kernel/runtime/libruntime/common/faas/logger"
@@ -167,19 +161,6 @@ func TestInvoker_DoInvoke(t *testing.T) {
 		invoker.DoInvoke(types.InvokeRequest{}, resp, -1, log.GetLogger())
 		convey.So(resp.StatusCode, convey.ShouldEqual, constants.FaaSError)
 		convey.So(resp.ErrorMessage, convey.ShouldEqual, "do cross cluster invoke failed, no time left")
-	})
-
-	convey.Convey("init sts failed", t, func() {
-		defer gomonkey.ApplyFunc(sts.InitStsSDK, func(serverCfg types.StsServerConfig) error {
-			return errors.New("mock sts init error")
-		}).Reset()
-		invoker := getMockInvoker()
-		resp := &types.GetFutureResponse{}
-
-		invoker.DoInvoke(types.InvokeRequest{}, resp, 100, log.GetLogger())
-
-		convey.So(resp.StatusCode, convey.ShouldEqual, constants.FaaSError)
-		convey.So(strings.Contains(resp.ErrorMessage, "mock sts init error"), convey.ShouldBeTrue)
 	})
 }
 

@@ -100,23 +100,15 @@ public:
 
     char privateKeyPaaswd[MAX_PASSWD_LENGTH] = {0};
 
-    std::string encryptPrivateKeyPasswd;
-
     bool enableDsAuth = false;
 
     bool enableDsEncrypt = false;
 
-    std::string dsPublicKeyContext = "";
+    std::string dsPublicKeyContextPath = "";
 
-    std::string encryptDsPublicKeyContext;
+    std::string runtimePublicKeyContextPath = "";
 
-    std::string runtimePublicKeyContext = "";
-
-    std::string encryptRuntimePublicKeyContext;
-
-    std::string runtimePrivateKeyContext = "";
-
-    std::string encryptRuntimePrivateKeyContext;
+    std::string runtimePrivateKeyContextPath = "";
 
     std::string primaryKeyStoreFile;
 

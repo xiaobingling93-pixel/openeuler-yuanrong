@@ -470,18 +470,14 @@ void ClusterModeRuntime::Init()
         libConfig.verifyFilePath = ConfigManager::Singleton().verifyFilePath;
         int len = sizeof(ConfigManager::Singleton().privateKeyPaaswd);
         memcpy_s(libConfig.privateKeyPaaswd, len, ConfigManager::Singleton().privateKeyPaaswd, len);
-        libConfig.encryptPrivateKeyPasswd = ConfigManager::Singleton().encryptPrivateKeyPasswd;
     }
     libConfig.primaryKeyStoreFile = ConfigManager::Singleton().primaryKeyStoreFile;
     libConfig.standbyKeyStoreFile = ConfigManager::Singleton().standbyKeyStoreFile;
     libConfig.encryptEnable = ConfigManager::Singleton().enableDsEncrypt;
     if (ConfigManager::Singleton().enableDsEncrypt) {
-        libConfig.runtimePublicKey = ConfigManager::Singleton().runtimePublicKeyContext;
-        libConfig.runtimePrivateKey = ConfigManager::Singleton().runtimePrivateKeyContext;
-        libConfig.dsPublicKey = ConfigManager::Singleton().dsPublicKeyContext;
-        libConfig.encryptRuntimePublicKeyContext = ConfigManager::Singleton().encryptRuntimePublicKeyContext;
-        libConfig.encryptRuntimePrivateKeyContext = ConfigManager::Singleton().encryptRuntimePrivateKeyContext;
-        libConfig.encryptDsPublicKeyContext = ConfigManager::Singleton().encryptDsPublicKeyContext;
+        libConfig.runtimePublicKeyPath = ConfigManager::Singleton().runtimePublicKeyContextPath;
+        libConfig.runtimePrivateKeyPath = ConfigManager::Singleton().runtimePrivateKeyContextPath;
+        libConfig.dsPublicKeyPath = ConfigManager::Singleton().dsPublicKeyContextPath;
     }
     libConfig.tlsContext = ConfigManager::Singleton().tlsContext;
     libConfig.httpIocThreadsNum = ConfigManager::Singleton().httpIocThreadsNum;

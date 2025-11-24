@@ -326,9 +326,9 @@ public class TaskTest {
         TestUtils.initYR();
         try {
             InvokeOptions opts = InvokeOptions.builder()
-                .addCustomExtensions("endpoint", "InvokeFunction1")
-                .addCustomExtensions("app_name", "InvokeFunction2")
-                .addCustomExtensions("tenant_id", "InvokeFunction3")
+                .addCustomExtension("endpoint", "InvokeFunction1")
+                .addCustomExtension("app_name", "InvokeFunction2")
+                .addCustomExtension("tenant_id", "InvokeFunction3")
                 .build();
             ObjectRef ref = YR.function(Counter::returnInt).options(opts).invoke(0);
             int res = (int) YR.get(ref, 10);
@@ -509,7 +509,6 @@ public class TaskTest {
         TestUtils.initYR(false);
         try {
             CreateParam createParam = new CreateParam();
-            createParam.setWriteMode(WriteMode.NONE_L2_CACHE);
             createParam.setConsistencyType(ConsistencyType.PRAM);
             // Check whether shared disk is enabled.
             ObjectRef ref = YR.put(10, createParam);

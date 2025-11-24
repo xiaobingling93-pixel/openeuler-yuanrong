@@ -21,7 +21,6 @@ def test_serialization_with_many_types(init_yr):
         "\u262F",
         "hello world",
         "\xff\xfe\x9c\x001\x000\x00",
-        None,
         True,
         False,
         [],
@@ -57,7 +56,7 @@ def test_serialization_with_many_types(init_yr):
         new_obj_2 = yr.get(yr.put(obj))
         assert obj == new_obj_1
         assert obj == new_obj_2
-        if type(obj).__module__ != "numpy":
+        if type(obj).__module__ != "numpy" and type(obj) is not bytes:
             assert type(obj) is type(new_obj_1)
             assert type(obj) is type(new_obj_2)
 

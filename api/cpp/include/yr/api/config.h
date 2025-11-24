@@ -118,12 +118,9 @@ struct Config {
     uint32_t httpIocThreadsNum = DEFAULT_HTTP_IOC_THREADS_NUM;
     bool enableDsAuth = false;
     bool enableDsEncrypt = false;
-    std::string dsPublicKeyContext = "";
-    std::string runtimePublicKeyContext = "";
-    std::string runtimePrivateKeyContext = "";
-    std::string encryptDsPublicKeyContext;
-    std::string encryptRuntimePublicKeyContext;
-    std::string encryptRuntimePrivateKeyContext;
+    std::string dsPublicKeyContextPath = "";
+    std::string runtimePublicKeyContextPath = "";
+    std::string runtimePrivateKeyContextPath = "";
     std::string primaryKeyStoreFile;
     std::string standbyKeyStoreFile;
     int maxTaskInstanceNum = -1;

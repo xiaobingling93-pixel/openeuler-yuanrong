@@ -165,7 +165,10 @@ struct LibruntimeConfig {
         return std::string(funcMeta.ns() + "-" + funcMeta.name());
     }
 
-    void ClearPaaswd() {}
+    void ClearPaaswd()
+    {
+        memset_s(privateKeyPaaswd, MAX_PASSWD_LENGTH, 0, MAX_PASSWD_LENGTH);
+    }
     ErrorInfo Decrypt();
     // functionSystemIpAddr is an IP address of function system server that used to discover driver.
     // functionSystemIpAddr and functionSystemPort is used by driver process
@@ -255,10 +258,6 @@ struct LibruntimeConfig {
     bool dedupLogs = false;
     std::string primaryKeyStoreFile;
     std::string standbyKeyStoreFile;
-    std::string encryptPrivateKeyPasswd;
-    std::string encryptDsPublicKeyContext;
-    std::string encryptRuntimePublicKeyContext;
-    std::string encryptRuntimePrivateKeyContext;
     libruntime::FunctionMeta funcMeta;
     bool needOrder = false;
     bool enableSigaction = true;

@@ -58,6 +58,7 @@ go env -w "GOFLAGS"="-mod=mod"
 echo "generating fs proto pb objects"
 protoc --proto_path=${POSIX_DIR} --go_out=${OUTPUT_DIR} --go-grpc_out=${OUTPUT_DIR} ${POSIX_DIR}/*.proto
 cp -ar ${OUTPUT_DIR}/yuanrong.org/kernel/pkg/ ${PROJECT_DIR}
+rm -rf "${OUTPUT_DIR}/yuanrong.org"
 
 echo "start to compile dashboard -s ${SCC_BUILD_ENABLED}"
 mkdir -p "${OUTPUT_DIR}/bin/"

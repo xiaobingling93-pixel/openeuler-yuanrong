@@ -72,9 +72,10 @@ from yr.runtime import (  # noqa: E402
 )
 from yr.config import (  # noqa: E402
     Config, InvokeOptions, UserTLSConfig, FunctionGroupOptions, SchedulingAffinityType,
-    FunctionGroupContext, ServerInfo, DeviceInfo, ResourceGroupOptions
+    FunctionGroupContext, ServerInfo, DeviceInfo, ResourceGroupOptions, GroupOptions,
 )
 
+from yr.group import Group
 from yr.stream import ProducerConfig, SubscriptionConfig, Element  # noqa: E402
 from yr.functionsdk.function import Function  # noqa: E402
 from yr.functionsdk.context import Context  # noqa: E402
@@ -102,5 +103,5 @@ __all__ = [
     "FunctionGroupOptions", "SchedulingAffinityType", "FunctionGroupContext", "ServerInfo", "DeviceInfo",
     "get_function_group_context", "create_resource_group", "remove_resource_group", "ResourceGroup",
     "FunctionProxy", "InstanceCreator", "InstanceProxy", "MethodProxy", "FunctionGroupHandler",
-    "FunctionGroupMethodProxy", "get_node_ip_address", "list_named_instances"
+    "FunctionGroupMethodProxy", "get_node_ip_address", "list_named_instances", "Group",  "GroupOptions",
 ]

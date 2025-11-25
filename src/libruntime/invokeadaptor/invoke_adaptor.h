@@ -27,9 +27,9 @@
 #include "request_manager.h"
 #include "src/dto/config.h"
 #include "src/dto/status.h"
-#include "src/libruntime/fiber.h"
 #include "src/libruntime/dependency_resolver.h"
 #include "src/libruntime/err_type.h"
+#include "src/libruntime/fiber.h"
 #include "src/libruntime/fmclient/fm_client.h"
 #include "src/libruntime/fsclient/fs_client.h"
 #include "src/libruntime/generator/generator_id_map.h"
@@ -132,6 +132,10 @@ public:
 
     virtual void GroupTerminate(const std::string &groupName);
 
+    virtual ErrorInfo GroupSuspend(const std::string &groupName);
+
+    virtual ErrorInfo GroupResume(const std::string &groupName);
+
     virtual std::pair<std::vector<std::string>, ErrorInfo> GetInstanceIds(const std::string &objId,
                                                                           const std::string &groupName);
 
@@ -172,7 +176,7 @@ public:
 
     virtual std::pair<ErrorInfo, std::string> GetNodeId();
     virtual std::pair<ErrorInfo, std::vector<ResourceUnit>> GetResources(void);
-    virtual std::pair<ErrorInfo, ResourceGroupUnit> GetResourceGroupTable(const std::string &resourceGroupId);\
+    virtual std::pair<ErrorInfo, ResourceGroupUnit> GetResourceGroupTable(const std::string &resourceGroupId);
     virtual std::pair<ErrorInfo, QueryNamedInsResponse> QueryNamedInstances();
 
 private:

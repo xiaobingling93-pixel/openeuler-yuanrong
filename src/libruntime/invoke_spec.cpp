@@ -337,8 +337,9 @@ void InvokeSpec::BuildInstanceInvokeRequest(const LibruntimeConfig &config)
     }
 }
 
-std::string InvokeSpec::BuildCreateMetaData(const LibruntimeConfig &config)
+std::string InvokeSpec::BuildCreateMetaData(const LibruntimeConfig &config, std::string &funcMetaStr)
 {
+    InitDesignatedInstanceId(config);
     libruntime::MetaData meta;
     meta.set_invoketype(this->invokeType);
     auto funcMeta = meta.mutable_functionmeta();
@@ -359,6 +360,9 @@ std::string InvokeSpec::BuildCreateMetaData(const LibruntimeConfig &config)
     }
     if (!this->functionMeta.ns.empty()) {
         funcMeta->set_ns(this->functionMeta.ns);
+    }
+    if (!designatedInstanceID.empty()) {
+        funcMetaStr = funcMeta->SerializeAsString();
     }
     auto metaConfig = meta.mutable_config();
     config.BuildMetaConfig(*metaConfig);

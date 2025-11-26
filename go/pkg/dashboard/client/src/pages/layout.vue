@@ -72,7 +72,7 @@ const TinyIconTotal = Logo;
 }
 
 .yr-logo {
-  height: 30px;
+  height: 34px;
   margin-top: 8px;
 }
 

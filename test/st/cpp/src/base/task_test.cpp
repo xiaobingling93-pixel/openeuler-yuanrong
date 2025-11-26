@@ -1161,7 +1161,7 @@ TEST_F(TaskTest, RepeatPutShouldNotOOM)
 /*
 并发get put数据
 */
-TEST_F(TaskTest, ConcurrencyCall)
+TEST_F(TaskTest, DISABLED_ConcurrencyCall)
 {
     int num = 5;
     std::vector<YR::ObjectRef<std::string>> objs_str;

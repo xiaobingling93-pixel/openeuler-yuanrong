@@ -123,6 +123,17 @@ GlooCollectiveGroup::GlooCollectiveGroup(const CollectiveGroupSpec &groupSpec, i
     } else if (backend == "IBVERBS") {
         gloo::transport::ibverbs::attr attr;
         attr.name = GetEnv("GLOO_IBVERBS_NAME");
+
+        auto indexStr = GetEnv("GLOO_IBVERBS_INDEX");
+        auto portStr = GetEnv("GLOO_IBVERBS_PORT");
+        try {
+            attr.index = indexStr.empty() ? 0 : std::stoi(indexStr);
+            attr.port = portStr.empty() ? 0 : std::stoi(portStr);
+        } catch (const std::exception &e) {
+            throw YR::Exception(
+                YR::Libruntime::ErrorCode::ERR_PARAM_INVALID,
+                "invalid GLOO_IBVERBS_INDEX: " + indexStr + ", or invalid GLOO_IBVERBS_PORT: " + portStr);
+        }
         dev = gloo::transport::ibverbs::CreateDevice(attr);
     } else {
         throw YR::Exception(YR::Libruntime::ErrorCode::ERR_PARAM_INVALID,

@@ -18,7 +18,7 @@
   <div class="preview">
     <tiny-nav-menu :data="menuData">
       <template #logo>
-        <img src="/logo.png" alt="YuanRong logo" class="yr-logo"/>
+        <img src="/favicon.ico" alt="YuanRong logo" class="yr-logo"/>
       </template>
       <template #toolbar>
          <p class="version">{{ config.version }}</p>
@@ -31,7 +31,7 @@
 <script setup lang="ts">
 import { ref } from 'vue';
 import { TinyNavMenu } from '@opentiny/vue';
-import Logo from '@/../public/logo.png';
+import Logo from '@/../public/favicon.ico';
 import config from '@/config/config.json';
 
 const menuData = ref([
@@ -44,11 +44,6 @@ const menuData = ref([
     title: 'Cluster',
     url: '/cluster',
     id: '2',
-  },
-  {
-    title: 'Jobs',
-    url: '/jobs',
-    id: '3',
   },
   {
     title: 'Instances',
@@ -77,7 +72,7 @@ const TinyIconTotal = Logo;
 }
 
 .yr-logo {
-  height: 30px;
+  height: 34px;
   margin-top: 8px;
 }
 

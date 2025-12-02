@@ -18,10 +18,10 @@
 import asyncio
 import logging
 from typing import Optional
-from yr.object_ref import ObjectRef
-from yr.runtime_holder import global_runtime
-from yr.fnruntime import GeneratorEndError
-from yr.exception import GeneratorFinished
+from yuanrong.object_ref import ObjectRef
+from yuanrong.runtime_holder import global_runtime
+from yuanrong.fnruntime import GeneratorEndError
+from yuanrong.exception import GeneratorFinished
 
 _logger = logging.getLogger(__name__)
 

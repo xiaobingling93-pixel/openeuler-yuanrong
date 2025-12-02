@@ -17,6 +17,7 @@
 """config manager"""
 
 import logging
+import os
 
 from yr.common import utils
 from yr.common.singleton import Singleton

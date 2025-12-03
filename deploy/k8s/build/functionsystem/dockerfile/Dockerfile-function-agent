@@ -1,0 +1,41 @@
+ARG docker_image
+FROM ${docker_image}
+ARG SN_ID
+ENV USER_UID=${SN_ID} \
+    USER_NAME=sn
+
+ENV GROUP_ID=${USER_UID} \
+    GROUP_NAME=${USER_NAME} \
+    HOME=/home/${USER_NAME} \
+    FUNCTIONSYSTEM_OUTPUT_DIR=openyuanrong
+
+ENV FUNCTIONAGENT=${HOME}/bin/function_agent
+
+RUN mkdir -p ${HOME}/bin/ && \
+    mkdir -p ${HOME}/lib/ && \
+    groupadd -g ${GROUP_ID} ${GROUP_NAME} && \
+    useradd -K MAIL_DIR=/dev/null -u ${USER_UID} -g ${GROUP_ID} -s /sbin/nologin ${USER_NAME} && \
+    chown -R ${USER_UID}:${GROUP_ID} ${HOME}
+
+RUN chmod u+s $(which ip) && \
+    chmod u+s $(which ping) && \
+    chmod u+s $(which iptables) && \
+    chmod u+s $(which ipset)
+
+# install operator binary
+COPY --chown=sn:sn ${FUNCTIONSYSTEM_OUTPUT_DIR}/functionsystem/bin/function_agent ${HOME}/bin
+COPY --chown=sn:sn ${FUNCTIONSYSTEM_OUTPUT_DIR}/deploy/k8s/build/functionsystem/entrypoint/entrypoint-function-agent ${HOME}/bin
+COPY --chown=sn:sn ${FUNCTIONSYSTEM_OUTPUT_DIR}/deploy/k8s/build/functionsystem/entrypoint/health-check ${HOME}/bin
+COPY --chown=sn:sn ${FUNCTIONSYSTEM_OUTPUT_DIR}/function_system/lib/* ${HOME}/lib/
+
+RUN chmod -R 700 ${HOME} && \
+    chmod -R 500 ${HOME}/bin && \
+    chmod -R 500 ${HOME}/lib && \
+    setcap 'cap_net_admin,cap_net_raw+ep-i'           ${FUNCTIONAGENT} && \
+    echo "${HOME}/lib" >> /etc/ld.so.conf.d/snlib.conf && ldconfig
+
+USER ${USER_UID}
+
+WORKDIR ${HOME}
+
+# ENTRYPOINT ["/home/sn/bin/entrypoint"]

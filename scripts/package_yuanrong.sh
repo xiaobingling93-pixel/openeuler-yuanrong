@@ -104,6 +104,12 @@ if [ -n "${frontend_filename}" ]; then
     cp -fr ${OUTPUT_DIR}/openyuanrong/pattern/pattern_faas/init_frontend_args.json ${OUTPUT_DIR}/openyuanrong/function_system/config/
 fi
 
+faas_filename=$(ls *faas*.tar.gz)
+if [ -n "${faas_filename}" ]; then
+    tar -zxvf ${faas_filename} -C ${OUTPUT_DIR}/openyuanrong
+    cp -fr ${OUTPUT_DIR}/openyuanrong/pattern/pattern_faas/init_scheduler_args.json ${OUTPUT_DIR}/openyuanrong/function_system/config/
+fi
+
 dashboard_filename=$(ls *dashboard*.tar.gz)
 if [ -n "${dashboard_filename}" ]; then
     tar -zxvf ${dashboard_filename} -C ${OUTPUT_DIR}/openyuanrong/function_system/

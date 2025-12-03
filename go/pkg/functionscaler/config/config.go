@@ -22,6 +22,8 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/asaskevich/govalidator/v11"
+
 	"yuanrong.org/kernel/pkg/common/faas_common/alarm"
 	"yuanrong.org/kernel/pkg/common/faas_common/crypto"
 	"yuanrong.org/kernel/pkg/common/faas_common/etcd3"

@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: faas-frontend
+  labels:
+    app: faas-frontend
+  namespace: {{ .Values.global.namespace }}
+spec:
+  type: ClusterIP
+  ports:
+    - port: {{ .Values.global.port.fassFrontendPort }}
+      protocol: TCP
+      targetPort: {{ .Values.global.port.fassFrontendPort }}
+  selector:
+    app: faas-frontend

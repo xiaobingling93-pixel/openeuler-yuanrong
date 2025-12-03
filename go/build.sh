@@ -99,8 +99,10 @@ CC='gcc -fstack-protector-strong -D_FORTIFY_SOURCE=2 -O2' go build -tags="${BUIL
 
 cd "${OUTPUT_DIR}"
 DASHBOARD_TAR_NAME="yr-dashboard-${VERSION}.tar.gz"
-tar -czvf "${DASHBOARD_TAR_NAME}" ./*
+tar -czvf "${DASHBOARD_TAR_NAME}" ./bin ./config
 mkdir -p "${RUNTIME_OUTPUT_DIR}"
 rm -rf "${RUNTIME_OUTPUT_DIR}/${DASHBOARD_TAR_NAME}"
 cp "${DASHBOARD_TAR_NAME}" "${RUNTIME_OUTPUT_DIR}"
 cd "${PROJECT_DIR}"
+
+bash -x build/faas/build.sh

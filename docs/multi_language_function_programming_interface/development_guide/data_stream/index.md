@@ -63,7 +63,7 @@ yr.finalize()
 
 int main(int argc, char *argv[])
 {
-    YR::Init(YR::Config{}, argc, argv)
+    YR::Init(YR::Config{}, argc, argv);
     std::string streamName = "this-stream";
     try {
         // 配置流自动删除
@@ -101,6 +101,7 @@ import java.util.List;
 
 import com.yuanrong.api.YR;
 import com.yuanrong.Config;
+import com.yuanrong.exception.YRException;
 import com.yuanrong.stream.Producer;
 import com.yuanrong.stream.ProducerConfig;
 import com.yuanrong.stream.Consumer;
@@ -177,7 +178,7 @@ yr.finalize()
 
 int main(int argc, char *argv[])
 {
-    YR::Init(YR::Config{}, argc, argv)
+    YR::Init(YR::Config{}, argc, argv);
     std::string streamName = "this-stream";
     try {
         YR::ProducerConf pConfig{.delayFlushTime=5, .pageSize=1024 * 1024ul, .maxStreamSize=1024 * 1024 * 1024ul, .autoCleanup=true};
@@ -211,6 +212,7 @@ import java.util.List;
 
 import com.yuanrong.api.YR;
 import com.yuanrong.Config;
+import com.yuanrong.exception.YRException;
 import com.yuanrong.stream.Producer;
 import com.yuanrong.stream.ProducerConfig;
 import com.yuanrong.stream.Consumer;
@@ -306,7 +308,7 @@ yr.finalize()
 
 int main(int argc, char *argv[])
 {
-    YR::Init(YR::Config{}, argc, argv)
+    YR::Init(YR::Config{}, argc, argv);
     std::string streamName = "this-stream";
     try {
         YR::ProducerConf pConfig{.delayFlushTime=5, .pageSize=1024 * 1024ul, .maxStreamSize=1024 * 1024 * 1024ul, .autoCleanup=true};
@@ -353,6 +355,7 @@ import java.util.List;
 
 import com.yuanrong.api.YR;
 import com.yuanrong.Config;
+import com.yuanrong.exception.YRException;
 import com.yuanrong.stream.Producer;
 import com.yuanrong.stream.ProducerConfig;
 import com.yuanrong.stream.Consumer;

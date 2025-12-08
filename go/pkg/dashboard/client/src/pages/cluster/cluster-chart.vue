@@ -48,7 +48,7 @@
           <tiny-grid-column field="logicalCPU" title="Logical Resources" :renderer="logicalResourcesRender"
                             width="11%"></tiny-grid-column>
           <template #empty>
-            <span class="font-size16">There is no more data available!</span>
+            <EmptyChart />
           </template>
         </tiny-grid>
       </div>
@@ -62,6 +62,7 @@ import { TinyGrid, TinyGridColumn } from '@opentiny/vue';
 import { GetCompAPI, GetInstAPI, GetPromQueryAPI } from '@/api/api';
 import { pagerConfig } from '@/components/chart-config';
 import CommonCard from '@/components/common-card.vue';
+import EmptyChart from '@/components/empty-chart.vue';
 import { MultiProgressBar, ProgressBar, SimpleProgressBar } from '@/components/progress-bar-template';
 import { WarningNotify } from '@/components/warning-notify';
 import { CPUConvert, MBToGB } from '@/utils/handleNum';

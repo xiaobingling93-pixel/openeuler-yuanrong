@@ -37,7 +37,7 @@
           <tiny-grid-column field="log" title="Log" align="center"
                             :renderer="{component: TinyLink, attrs: toJobDetails}"></tiny-grid-column>
           <template #empty>
-            <span class="font-size16">There is no more data available!</span>
+            <EmptyChart />
           </template>
         </tiny-grid>
       </div>
@@ -51,6 +51,7 @@ import { TinyGrid, TinyGridColumn, TinyLink } from '@opentiny/vue';
 import { ListJobsAPI } from '@/api/api';
 import { pagerConfig, statusFilter } from '@/components/chart-config';
 import CommonCard from '@/components/common-card.vue';
+import EmptyChart from '@/components/empty-chart.vue';
 import { WarningNotify } from '@/components/warning-notify';
 import { DayFormat } from '@/utils/dayFormat';
 import { ChartSort } from '@/utils/sort';

@@ -126,7 +126,7 @@ fi
 mv ${OUTPUT_DIR}/openyuanrong/functionsystem/deploy/third_party ${OUTPUT_DIR}/openyuanrong/
 mv ${OUTPUT_DIR}/openyuanrong/functionsystem/deploy/function_system/* ${OUTPUT_DIR}/openyuanrong/functionsystem/deploy/
 rm -rf ${OUTPUT_DIR}/openyuanrong/functionsystem/deploy/function_system/
-mv ${OUTPUT_DIR}/openyuanrong/functionsystem/deploy/vendor/etcd ${OUTPUT_DIR}/openyuanrong/functionsystem/deploy/third_party/
+mv ${OUTPUT_DIR}/openyuanrong/functionsystem/deploy/vendor/etcd ${OUTPUT_DIR}/openyuanrong/third_party/
 rm -rf ${OUTPUT_DIR}/openyuanrong/functionsystem/deploy/vendor
 if [ -d ${OUTPUT_DIR}/openyuanrong/third_party/ ]; then
   find ${OUTPUT_DIR}/openyuanrong/third_party/ -type f -exec chmod 550 {} \;

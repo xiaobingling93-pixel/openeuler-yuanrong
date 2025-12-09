@@ -80,12 +80,9 @@ function download_metrics() {
         echo "datasystem sdk exist."
         return
     fi
-    METRICS_OUT_DIR="${YR_METRICS_BIN_DIR}/"
-    mkdir -p "${METRICS_OUT_DIR}"
-    pushd "${METRICS_OUT_DIR}"
+    cd ${RUNTIME_SRC_DIR}
     wget -O metrics.tar.gz ${METRICS_CACHE}
     tar --no-same-owner -zxf metrics.tar.gz
-    popd
 }
 
 function compile_datasystem() {

@@ -8,4 +8,3 @@
 
 ```{doxygenfunction} YR::Instance(F constructor, const std::string &name, const std::string &ns)
 ```
-

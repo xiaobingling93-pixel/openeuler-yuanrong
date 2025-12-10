@@ -131,5 +131,3 @@ ASSERT_TRUE(status.IsOk());
 
 :::
 ::::
-
-

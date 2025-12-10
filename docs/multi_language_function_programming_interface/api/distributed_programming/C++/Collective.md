@@ -26,6 +26,7 @@ Constants:
 
 ```{doxygenvariable} YR::Collective::DEFAULT_GROUP_NAME
 ```
+
 ## Collective-GroupOps
 
 Collective communication group management interfaces for creating, initializing, and destroying collective communication groups.
@@ -44,6 +45,7 @@ Collective communication group management interfaces for creating, initializing,
 
 ```{doxygenfunction} YR::Collective::GetRank(const std::string &groupName = DEFAULT_GROUP_NAME)
 ```
+
 ## Collective-CommOps
 
 Collective communication operation interfaces, providing distributed communication primitives such as AllReduce, Reduce, AllGather, Broadcast, etc.

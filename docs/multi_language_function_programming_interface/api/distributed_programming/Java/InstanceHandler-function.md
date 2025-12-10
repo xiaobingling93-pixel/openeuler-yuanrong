@@ -203,4 +203,3 @@ Java functions under the cloud call member functions of Java class instances on 
 - Returns:
 
     [InstanceFunctionHandler](InstanceFunctionHandler.md) Instance.
-

@@ -145,4 +145,3 @@ private boolean sameLifecycle = true
 ```
 
 是否为分组实例启用 fate-sharing 配置。``true`` 表示组中的实例将一起创建和销毁，``false`` 表示实例可以拥有独立的生命周期。默认为 ``true``。
-

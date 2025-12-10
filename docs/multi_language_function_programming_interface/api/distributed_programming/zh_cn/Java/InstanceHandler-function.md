@@ -203,4 +203,3 @@ InstanceHandler.terminate();
 - 返回：
 
     [InstanceFunctionHandler](InstanceFunctionHandler.md) 实例。
-

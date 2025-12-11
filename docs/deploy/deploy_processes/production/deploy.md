@@ -95,6 +95,7 @@ Cluster master info:
 # 使用前一步骤打印的主节点信息替换引号中的内容。
 yr start --enable_collector=true --enable_separated_redirect_runtime_std=true --master_info "local_ip:x.x.x.x,master_ip:x.x.x.x,etcd_ip:x.x.x.x,etcd_port:32379,global_scheduler_port:22770,ds_master_port:12123,etcd_peer_port:32380,bus-proxy:22772,bus:22773,ds-worker:31501,dashbaord_port:9080,"
 ```
+
 ### 配置函数日志在 Driver 端输出
 
 配置函数日志在 Driver 端输出后，本地程序直接调用无状态或有状态函数时，将流式输出函数的 stdout 和 stderr 日志到终端。

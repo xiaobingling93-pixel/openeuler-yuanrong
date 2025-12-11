@@ -32,5 +32,3 @@ The parameter structure is supplemented with the following explanation:
 
 ```{doxygenfunction} YR::DeleteStream
 ```
-
-

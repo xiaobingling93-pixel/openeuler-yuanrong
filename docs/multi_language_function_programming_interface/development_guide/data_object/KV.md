@@ -26,6 +26,7 @@ KV 接口支持传入二进制数据，也支持传入用户自定义对象，op
 - `ttlSecond`：用于指定数据的生命周期，当超出 TTL 自动删除。当配置为 0 表示数据长期有效，系统不会自动删除。
 
 openYuanrong  KV 接口各语言支持 API 如下表所示。
+
 | API 类型 | Python | Java | C++ |
 | --------- | ---------------- | ------------- | -----------|
 | 写入 | [yr.kv_write](../../api/distributed_programming/zh_cn/Python/yr.kv_write.rst)：写入二进制数据 | [YR.kv().set](../../api/distributed_programming/zh_cn/Java/kv.set.md)：写入二进制数据 | [YR::KV().Set](../../api/distributed_programming/zh_cn/Cpp/KV-Set.rst)：写入二进制数据<br>  [YR::KV().Write](../../api/distributed_programming/zh_cn/Cpp/KV-Write.rst)：写入用户自定义格式数据，openYuanrong 自动序列化<br>  [YR::KV().MSetTx](../../api/distributed_programming/zh_cn/Cpp/KV-MSetTx.rst)：批量写入数据多个二进制数据。多个数据具备事务性语义，保证同时成功或同时失败。<br>  [YR::KV().MWriteTx](../../api/distributed_programming/zh_cn/Cpp/KV-MWriteTx.rst)：批量写入多个用户自定义格式数据，openYuanrong 自动执行序列化。多个数据具备事务性语义，保证同时成功或同时失败。<br> |

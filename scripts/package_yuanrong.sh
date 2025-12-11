@@ -108,7 +108,7 @@ fi
 faas_filename=$(ls *faas*.tar.gz)
 if [ -n "${faas_filename}" ]; then
     tar -zxvf ${faas_filename} -C ${OUTPUT_DIR}/openyuanrong
-    cp -fr ${OUTPUT_DIR}/openyuanrong/pattern/pattern_faas/init_scheduler_args.json ${OUTPUT_DIR}/openyuanrong/function_system/config/
+    cp -fr ${OUTPUT_DIR}/openyuanrong/pattern/pattern_faas/init_scheduler_args.json ${OUTPUT_DIR}/openyuanrong/functionsystem/config/
 fi
 
 dashboard_filename=$(ls *dashboard*.tar.gz)

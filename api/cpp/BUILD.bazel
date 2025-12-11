@@ -226,7 +226,7 @@ genrule(
         cp -rf $(locations :cpp_strip) $$CPP_SDK_DIR/bin/ &&
         rm -rf $$CPP_SDK_DIR/bin/libyr-api.so $$CPP_SDK_DIR/bin/libfunctionsdk.so
         cp -rf $$BASE_DIR/api/cpp/include $$CPP_SDK_DIR/ &&
-        DATASYSTEM_DIR=$$BASE_DIR/external/datasystem_sdk/cpp &&
+        DATASYSTEM_DIR=$$BASE_DIR/external/datasystem_sdk &&
         cp -rf $$DATASYSTEM_DIR/include $$CPP_SDK_DIR &&
         cp -rf $$DATASYSTEM_DIR/lib $$CPP_SDK_DIR &&
         METRICS_DIR=$$BASE_DIR/external/metrics_sdk &&

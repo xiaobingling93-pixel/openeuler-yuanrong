@@ -362,7 +362,7 @@ genrule(
         cp -fr $(locations :java_strip) $(locations //:grpc_strip) $$JAVA_SERVICE_DIR/lib &&
         DATASYSTEM_DIR=$$BASE_DIR/external/datasystem_sdk &&
         METRICS_DIR=$$BASE_DIR/external/metrics_sdk &&
-        cp -rf $$DATASYSTEM_DIR/cpp/lib/* $$JAVA_SERVICE_DIR/lib &&
+        cp -rf $$DATASYSTEM_DIR/lib/* $$JAVA_SERVICE_DIR/lib &&
         cp -rf $$METRICS_DIR/lib/* $$JAVA_SERVICE_DIR/lib &&
         echo "$$BASE_DIR" > $@
     """,

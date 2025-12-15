@@ -28,8 +28,9 @@ class Group:
     destruction. It follows the fate-sharing principle, where all instances in the group are created or destroyed
     together.
 
-    The `Group` class provides methods to create, terminate, suspend, resume, and manage grouped instances. It ensures that all instances
-    in the group are treated as a single unit, and any failure during group creation will roll back the entire group.
+    The `Group` class provides methods to create, terminate, suspend, resume, and manage grouped instances. 
+    It ensures that all instances in the group are treated as a single unit, and any failure during group 
+    creation will roll back the entire group.
 
     Examples:
         >>> import yr

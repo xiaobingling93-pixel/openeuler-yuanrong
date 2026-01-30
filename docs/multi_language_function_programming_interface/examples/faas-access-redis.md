@@ -10,22 +10,22 @@
 
 ## 准备工作
 
-1. （[在 K8s 上部署 openYuanrong 集群](../../deploy/deploy_on_k8s/index.md)）并在 k8s 集群主节点使用 kubectl 工具获取openYuanrong服务端点。
+1. [在 K8s 上部署 openYuanrong 集群](../../deploy/deploy_on_k8s/index.md)在 K8s 集群主节点使用 kubectl 工具获取openYuanrong服务端点。
 
-    meta service 服务，它负责函数及资源池的管理等功能
+    meta service 服务，它负责函数及资源池的管理等功能。
 
     ```bash
     echo "http://$(kubectl get nodes -o jsonpath='{.items[0].status.addresses[?(@.type=="InternalIP")].address}'):$(kubectl get svc meta-service -o jsonpath='{.spec.ports[0].nodePort}')"
     ```
 
-    frontend 服务，它负责接入流量，承担函数调用等功能
+    frontend 服务，它负责接入流量，承担函数调用等功能。
 
     ```bash
     echo "http://$(kubectl get nodes -o jsonpath='{.items[0].status.addresses[?(@.type=="InternalIP")].address}'):$(kubectl get svc faas-frontend-lb -o jsonpath='{.spec.ports[0].nodePort}')"
     ```
 
-2. 安装openYuanrong Java SDK 中的 faas-function-sdk（[安装指南](../../deploy/installation.md)）与 MinIO 客户端（[安装及配置](../../../docs/reference/development-tools.md)），用于上传代码包到openYuanrong集群中的 MinIO 服务。
-3. 已部署 Redis 集群
+2. 安装函数服务 [Java SDK](../../deploy/installation.md#java-sdk) 中的 faas-function-sdk 与 [MinIO Client](tools-minio-client)。 MinIO Client 用于上传代码包到 openYuanrong 集群中的 MinIO 服务。
+3. 已部署 Redis 集群。
 
 ## 实现流程
 

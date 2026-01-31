@@ -36,7 +36,7 @@
 namespace YR {
 namespace Libruntime {
 const std::string HETERO_PREFIX = "hetero-dev-buf-";
-const int MAX_INS_ID_LENGTH = 64;
+const int MAX_INS_ID_LENGTH = 128;
 const std::string DELEGATE_DIRECTORY_QUOTA = "DELEGATE_DIRECTORY_QUOTA";
 const std::string DELEGATE_DIRECTORY_INFO = "DELEGATE_DIRECTORY_INFO";
 const std::string DEFALUT_DELEGATE_DIRECTORY_INFO = "/tmp";
@@ -193,7 +193,7 @@ ErrorInfo Libruntime::CheckSpec(std::shared_ptr<InvokeSpec> spec)
     if (insId.size() > MAX_INS_ID_LENGTH) {
         return ErrorInfo(
             YR::Libruntime::ErrorCode::ERR_PARAM_INVALID, YR::Libruntime::ModuleCode::RUNTIME,
-            "The instance ID size is " + std::to_string(insId.size()) + ", exceeds the maximum length of 64 bytes");
+            "The instance ID size is " + std::to_string(insId.size()) + ", exceeds the maximum length of 128 bytes");
     }
     return ErrorInfo();
 }

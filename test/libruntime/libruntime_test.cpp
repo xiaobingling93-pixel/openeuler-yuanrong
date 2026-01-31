@@ -297,15 +297,19 @@ TEST_F(LibruntimeTest, CreateFailedTest)
               "invalid opts concurrency, concurrency: -1, please set the concurrency range between 1 and 1000");
     opts.customExtensions[CONCURRENCY] = "1";
 
-    meta.name = "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";
+    meta.name =
+        "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+        "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";
     res = lr->CreateInstance(meta, invokeArgs, opts);
     ASSERT_EQ(res.first.Code(), ErrorCode::ERR_PARAM_INVALID);
-    ASSERT_NE(res.first.Msg().find("exceeds the maximum length of 64 bytes"), std::string::npos);
-    meta.name = "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";
+    ASSERT_NE(res.first.Msg().find("exceeds the maximum length of 128 bytes"), std::string::npos);
+    meta.name =
+        "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+        "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";
     meta.ns = "ns";
     res = lr->CreateInstance(meta, invokeArgs, opts);
     ASSERT_EQ(res.first.Code(), ErrorCode::ERR_PARAM_INVALID);
-    ASSERT_NE(res.first.Msg().find("exceeds the maximum length of 64 bytes"), std::string::npos);
+    ASSERT_NE(res.first.Msg().find("exceeds the maximum length of 128 bytes"), std::string::npos);
 }
 
 TEST_F(LibruntimeTest, AllocReturnObjectSmallTest)

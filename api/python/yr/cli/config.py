@@ -52,8 +52,8 @@ class ConfigResolver:
         self.mode = mode
         self.yr_package_path = cli_dir.parent
         self.env_subst_keys = env_subst_keys
-        self.runtime_context = self._build_runtime_context()
         if render:
+            self.runtime_context = self._build_runtime_context()
             self.jinja_env = Environment(
                 undefined=StrictUndefined,
                 trim_blocks=True,

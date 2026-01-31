@@ -312,7 +312,7 @@ class SystemLauncher:
         self.mode = mode
         self.resolver = ConfigResolver(config_path, cli_dir, mode, overrides, render)
         self.session_manager = SessionManager(
-            self.resolver.runtime_context["time"],
+            self.resolver.runtime_context["time"] if mode else "",
             mode,
             self.resolver.runtime_context["deploy_path"] / "session.json" if mode else session_file,
         )

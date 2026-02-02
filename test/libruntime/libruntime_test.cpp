@@ -1315,9 +1315,9 @@ TEST_F(LibruntimeTest, KillAsyncTest)
 {
     auto mock_adaptor = std::make_shared<YR::Libruntime::MockInvokeAdaptor>();
     lr->invokeAdaptor = mock_adaptor;
-    EXPECT_CALL(*mock_adaptor, KillAsyncCB(_, _, _, _))
+    EXPECT_CALL(*mock_adaptor, KillAsyncCB(_, _, _, _, _))
         .WillOnce(Invoke([](const std::string &instanceId, const std::string &payload, int signal,
-                            std::function<void(const ErrorInfo &err)> cb) { cb(YR::Libruntime::ErrorInfo()); }));
+                            std::function<void(const ErrorInfo &err)> cb, int timeoutSec) { cb(YR::Libruntime::ErrorInfo()); }));
     auto promise = std::make_shared<std::promise<ErrorInfo>>();
     auto f = promise->get_future();
     lr->KillAsync("instanceId", 1, [promise](const ErrorInfo &err) { promise->set_value(err); });

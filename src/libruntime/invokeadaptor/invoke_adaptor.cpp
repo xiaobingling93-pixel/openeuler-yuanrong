@@ -1085,8 +1085,54 @@ void InvokeAdaptor::InvokeInstanceFunction(std::shared_ptr<InvokeSpec> spec)
             return;
         }
     }
+    if (librtConfig->enableEvent) {
+        auto it = spec->opts.invokeLabels.find(INSTANCE_REQUIREMENT_ACCEPT);
+        // 如果froceinvoke的是一个sse调用，由于signal无法通知到一个正在优雅退出的实例，这里会卡住，当前没有这个场景
+        if (it != spec->opts.invokeLabels.end() && it->second == INSTANCE_REQUIREMENT_ACCEPT_EVENT_STREAM) {
+            YRLOG_DEBUG("start to send eventInfo signal, instanceId is {}", spec->requestId);
+            SendEventInfoSignalAndInvoke(librtConfig->instanceId, spec->instanceId, spec);
+            return;
+        }
+    }
     fsClient->InvokeAsync(spec->requestInvoke, std::bind(&InvokeAdaptor::InvokeNotifyHandler, this, _1, _2),
                           spec->opts.timeout == 0 ? FLAG_OF_REQUEST_NO_TIMEOUT : spec->opts.timeout);
+}
+
+void InvokeAdaptor::SendEventInfoSignalAndInvoke(const std::string &srcInstanceId, const std::string &instanceId,
+                                                 const std::shared_ptr<InvokeSpec> &invokeSpec)
+{
+    EventPayload eventPayload;
+    eventPayload.set_serverip(fsClient->GetEventServerIP());
+    eventPayload.set_serverport(fsClient->GetEventServerPort());
+    eventPayload.set_serverinstanceid(srcInstanceId);
+    std::string payload;
+    eventPayload.SerializeToString(&payload);
+    auto weakThis = weak_from_this();
+    auto cb = [weakThis, invokeSpec, instanceId](const ErrorInfo &err) -> void {
+        if (!err.OK()) {
+            YRLOG_ERROR("Failed to receive eventInfo signal response, instance id is {}, err is: {}", instanceId,
+                        err.Msg());
+        } else {
+            YRLOG_DEBUG("Success to receive eventInfo signal response.");
+        }
+        if (auto thisPtr = weakThis.lock(); thisPtr) {
+            if (err.IsTimeout()) {
+                thisPtr->memStore->AddEventData(invokeSpec->requestId, YR::Libruntime::EVENT_EOF);
+                NotifyRequest fake;
+                fake.set_code(common::ErrorCode(ERR_INNER_SYSTEM_ERROR));
+                fake.set_message("sse request signal timeout, requestId: " + invokeSpec->requestId);
+                fake.set_requestid(invokeSpec->requestInvoke->Mutable().requestid());
+                thisPtr->InvokeNotifyHandler(fake, err);
+                return;
+            }
+            thisPtr->fsClient->InvokeAsync(invokeSpec->requestInvoke,
+                                           std::bind(&InvokeAdaptor::InvokeNotifyHandler, thisPtr, _1, _2),
+                                           invokeSpec->opts.timeout == 0 ? FLAG_OF_REQUEST_NO_TIMEOUT
+                                                                         : invokeSpec->opts.timeout);
+        }
+    };
+    this->KillAsyncCB(instanceId, std::move(payload), libruntime::Signal::UpdateEventInfo, cb,
+                      EVENT_SIGNAL_TIMEOUT_SECOND);
 }
 
 void InvokeAdaptor::SubmitFunction(std::shared_ptr<InvokeSpec> spec)
@@ -1651,7 +1697,7 @@ void InvokeAdaptor::KillAsync(const std::string &instanceId, const std::string &
 }
 
 void InvokeAdaptor::KillAsyncCB(const std::string &instanceId, const std::string &payload, int signal,
-                                std::function<void(const ErrorInfo &err)> cb)
+                                std::function<void(const ErrorInfo &err)> cb, int timeoutSec)
 {
     YRLOG_DEBUG("start kill instance async, instance id is {}, signal is {}, payload is {}", instanceId, signal,
                 payload);
@@ -1670,7 +1716,7 @@ void InvokeAdaptor::KillAsyncCB(const std::string &instanceId, const std::string
             return;
         }
         cb({});
-    });
+    }, timeoutSec);
 }
 
 void InvokeAdaptor::ReceiveRequestLoop(void)

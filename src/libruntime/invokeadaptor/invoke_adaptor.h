@@ -89,6 +89,9 @@ public:
 
     void InvokeInstanceFunction(std::shared_ptr<InvokeSpec> spec);
 
+    void SendEventInfoSignalAndInvoke(const std::string &srcInstanceId, const std::string &instnaceId,
+                                      const std::shared_ptr<InvokeSpec> &invokeSpec);
+
     void SubmitFunction(std::shared_ptr<InvokeSpec> spec);
 
     void InvokeStatelessFunction(const std::shared_ptr<InvokeSpec> spec, InvokeCallBack callback);
@@ -117,7 +120,7 @@ public:
 
     virtual void KillAsync(const std::string &instanceId, const std::string &payload, int signal);
     virtual void KillAsyncCB(const std::string &instanceId, const std::string &payload, int signal,
-                             std::function<void(const ErrorInfo &err)> cb);
+                             std::function<void(const ErrorInfo &err)> cb, int timeoutSec = -1);
 
     CallResponse CallReqProcess(const CallRequest &req);
 

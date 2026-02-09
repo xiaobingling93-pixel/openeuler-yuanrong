@@ -16,10 +16,10 @@
 
 """setup"""
 
-from enum import Enum
 import os
 import shutil
 import warnings
+from enum import Enum
 
 import setuptools
 from setuptools.command.build_ext import build_ext
@@ -133,7 +133,7 @@ else:
     )
     setup_spec.entry_points = {
         "console_scripts": [
-            "yrcli=yr.cli.scripts:main",
+            "yrcli=yr.cli.scripts:run_yr",
             "yr=yr.cli.main:main",
         ]
     }

@@ -15,6 +15,7 @@
 # limitations under the License.
 
 import logging
+import sys
 from pathlib import Path
 from typing import Optional
 
@@ -34,13 +35,14 @@ logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s.%(msecs)03d | %(levelname)-7s | %(name)s:%(funcName)s:%(lineno)d - %(message)s",
     datefmt="%Y-%m-%d %H:%M:%S",
+    force=True,
 )
 logger = logging.getLogger(__name__)
 
 print_logger = logging.getLogger("print")
 print_logger.setLevel(logging.INFO)
 print_logger.propagate = False
-handler = logging.StreamHandler()
+handler = logging.StreamHandler(sys.stdout)
 handler.setFormatter(logging.Formatter("%(message)s"))
 print_logger.addHandler(handler)
 
@@ -318,7 +320,7 @@ def config_template(ctx: click.Context) -> None:
 
 
 def main(cmdargs: Optional[list[str]] = None) -> None:
-    cli.main(args=cmdargs, prog_name="yrexp", standalone_mode=True)
+    cli.main(args=cmdargs, prog_name="yr", standalone_mode=True)
 
 
 if __name__ == "__main__":

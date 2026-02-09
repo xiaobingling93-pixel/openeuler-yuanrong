@@ -242,9 +242,7 @@ class SessionManager:
         fm_ip, fm_port = _parse_addr(config["function_master"]["args"]["ip"])
         _, fp_port = _parse_addr(config["function_proxy"]["args"]["address"])
         _, ds_worker_port = _parse_addr(config["ds_worker"]["args"]["worker_address"])
-        frontend_port = (
-            config["values"]["frontend"].get("port") if config["mode"][self.mode.value].get("frontend") else None
-        )
+        frontend_port = config["frontend"].get("port") if config["mode"][self.mode.value].get("frontend") else None
         self.session_data["mode"] = self.mode.value
         self.session_data["cluster_info"] = {
             "for-join": {
@@ -581,13 +579,14 @@ class SystemLauncher:
             for comp_name, comp_info in session.get("components", {}).items():
                 pid = comp_info.get("pid")
                 status = "RUNNING"
+                restart_count = comp_info.get("restart_count", 0)
                 if pid:
                     try:
                         os.kill(pid, 0)
                     except ProcessLookupError:
                         healthy = False
                         status = "STOPPED"
-                print_logger.info(f"  {comp_name:<18} {status} (PID: {pid})")
+                print_logger.info(f"  {comp_name:<20} {status} (PID: {pid}) (Restart Count: {restart_count})")
         else:
             print_logger.info("System Status: STOPPED")
             healthy = False
@@ -891,13 +890,13 @@ class SystemLauncher:
         """Print component status from session data (for parent process)."""
         logger.info("Component Status:")
         logger.info("-" * 60)
-        logger.info(f"{'Component':<15} {'PID':<8} {'Status':<12}")
+        logger.info(f"{'Component':<20} {'PID':<8} {'Status':<12}")
         logger.info("-" * 60)
 
         for comp_name, comp_info in session.get("components", {}).items():
             pid = comp_info.get("pid", "N/A")
             status = comp_info.get("status", "unknown")
-            logger.info(f"{comp_name:<15} {pid:<8} {status:<12}")
+            logger.info(f"{comp_name:<20} {pid:<8} {status:<12}")
         logger.info("-" * 60)
         if self.mode == StartMode.MASTER:
             self._print_join_info()
@@ -1142,6 +1141,6 @@ def write_old_current_master_info(session_data: dict[str, any]) -> None:
             master_info = master_info + f"frontend_port:{session_data['cluster_info']['for-join']['frontend.port']},"
         if len(session_data["cluster_info"]["for-join"]["etcd.addresses"]) > 1:
             for addr in session_data["cluster_info"]["for-join"]["etcd.addresses"]:
-                master_info += f"etcd_addr_list:{addr},"
+                master_info += f"etcd_addr_list:{addr.get('ip')},"
         master_info += "\n"
         f.write(master_info)

@@ -195,15 +195,15 @@ Group
 
     .. cpp:member:: std::string resource = "NONE"
 
-       要绑定的资源类型。默认类型为 `None`。
+       要绑定的资源类型。默认类型为 ``None``。
 
        - **None**：不绑定。
        - **NUMA**：绑定到 NUMA 节点。
 
     .. cpp:member:: std::string strategy = "NONE"
 
-       指定资源的绑定策略，默认策略为 `None`。
+       指定资源的绑定策略，默认策略为 ``None``。
 
-       - **None**：等同于 `SPREAD` 。
+       - **None**：等同于 ``SPREAD`` 。
        - **PACK**：尽可能将多个实例打包到同一个资源单元中。
        - **SPREAD**：尽可能将多个实例分布在不同的资源单元上。

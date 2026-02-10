@@ -43,7 +43,7 @@ struct BindOptions {
 
        - ``'PACK'``: Pack multiple instances into the same resource units as much as possible.
 
-       - ``'SPREAD`'': Distribute multiple instances across different resource units as much as possible.
+       - ``'SPREAD'``: Distribute multiple instances across different resource units as much as possible.
     */
     std::string strategy = "NONE";
 };
@@ -77,11 +77,11 @@ struct GroupOptions {
 
         - ``'PACK'``: Pack multiple instances into the same node as much as possible.
 
-        - ``'SPREAD`'': Distribute multiple instances across different nodes as much as possible.
+        - ``'SPREAD'``: Distribute multiple instances across different nodes as much as possible.
 
-        - ''`STRICT_PACK`'': All instances must be placed on the same node, otherwise creation fails.
+        - ``'STRICT_PACK'``: All instances must be placed on the same node, otherwise creation fails.
 
-        - ''`STRICT_SPREAD`'': All instances must be placed on different nodes, otherwise creation fails.
+        - ``'STRICT_SPREAD'``: All instances must be placed on different nodes, otherwise creation fails.
     */
     std::string strategy = "None";
     /**

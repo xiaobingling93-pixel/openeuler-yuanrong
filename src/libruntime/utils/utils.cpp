@@ -275,28 +275,28 @@ GroupPolicy ConvertStrategyToPolicy(const std::string &stategy)
 std::string ConvertBindResource(const std::string &resource)
 {
     static const std::unordered_map<std::string, std::string> resourceMap = {
+        {"NONE", "NONE"},
         {"NUMA", "NUMA"}};
     auto resourceIt = resourceMap.find(resource);
     if (resourceIt != resourceMap.end()) {
         return resourceIt->second;
-    } else {
-        YRLOG_WARN("Invalid bind resource, {}", resource);
-        return "NONE";
     }
+    YRLOG_WARN("Invalid bind resource, {}", resource);
+    return "NONE";
 }
 
 BindStrategy ConvertBindStrategy(const std::string &stategy)
 {
     static const std::unordered_map<std::string, BindStrategy> strategyMap = {
+        {"NONE", BindStrategy::BIND_None},
         {"SPREAD", BindStrategy::BIND_Spread},
         {"PACK", BindStrategy::BIND_Pack}};
     auto strategyIt = strategyMap.find(stategy);
     if (strategyIt != strategyMap.end()) {
         return strategyIt->second;
-    } else {
-        YRLOG_WARN("Invalid bind strategy, {}", stategy);
-        return BindStrategy::BIND_None;
     }
+    YRLOG_WARN("Invalid bind strategy, {}", stategy);
+    return BindStrategy::BIND_None;
 }
 
 int unhexlify(std::string input, char *ascii)

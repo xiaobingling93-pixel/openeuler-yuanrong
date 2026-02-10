@@ -106,6 +106,13 @@ TEST_F(NamedGroupTest, BuildCreateReqsTest)
     GroupOptions *options = createReqs.mutable_groupopt();
     ASSERT_EQ(options->bind().resource(), "NUMA");
     ASSERT_EQ(options->bind().policy(), ::common::BindStrategy::BIND_Spread);
+
+    namedGroup->opts.bind.resource = "aaa";
+    namedGroup->opts.bind.strategy = "bbb";
+    auto invalidCreateReqs = namedGroup->BuildCreateReqs();
+    GroupOptions *invalidOptions = invalidCreateReqs.mutable_groupopt();
+    ASSERT_EQ(invalidOptions->bind().resource(), "NONE");
+    ASSERT_EQ(invalidOptions->bind().policy(), ::common::BindStrategy::BIND_None);
 }
 }  // namespace test
 }  // namespace YR

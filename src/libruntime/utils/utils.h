@@ -68,5 +68,5 @@ int32_t ToMs(int32_t timeoutS);
 bool WillSizeOverFlow(size_t a, size_t b);
 GroupPolicy ConvertStrategyToPolicy(const std::string &stategy);
 std::string ConvertBindResource(const std::string &resource);
-BindStrategy ConvertBindStrategy(const std::string &stategy);
+BindStrategy ConvertBindStrategy(const std::string &strategy);
 }  // namespace YR

@@ -285,17 +285,17 @@ std::string ConvertBindResource(const std::string &resource)
     return "NONE";
 }
 
-BindStrategy ConvertBindStrategy(const std::string &stategy)
+BindStrategy ConvertBindStrategy(const std::string &strategy)
 {
     static const std::unordered_map<std::string, BindStrategy> strategyMap = {
         {"NONE", BindStrategy::BIND_None},
         {"SPREAD", BindStrategy::BIND_Spread},
         {"PACK", BindStrategy::BIND_Pack}};
-    auto strategyIt = strategyMap.find(stategy);
+    auto strategyIt = strategyMap.find(strategy);
     if (strategyIt != strategyMap.end()) {
         return strategyIt->second;
     }
-    YRLOG_WARN("Invalid bind strategy, {}", stategy);
+    YRLOG_WARN("Invalid bind strategy, {}", strategy);
     return BindStrategy::BIND_None;
 }
 

@@ -111,44 +111,45 @@
 
 ## function system 配置
 
-|  参数名  | 说明    | 默认值                                                  |  备注 |
-| ------- | ------- |------------------------------------------------------| ------------------- |
-| `-g,--driver_gateway_enable` | function-proxy 开启端口，支持 driver 直连。 | ``false``                                                | 选填，取值：``true``、``false``，yr_master.sh 启动固定为 ``true``。 |
-| `--state_storage_type` | 状态存储类型。 | ``datasystem``                                              | 选填，取值：``datasystem``、``disable``。 |
-| `--min_instance_cpu_size` | 函数实例支持请求最小 cpu（单位：``1/1000`` 核）。 | ``300``                                                  |选填。 |
-| `--min_instance_memory_size` | 函数实例支持请求最小 memory（单位：MB）。 | ``128``                                                  | 选填。|
-| `--max_instance_cpu_size` | 函数实例支持请求最大 cpu（单位：``1/1000`` 核）。 | ``16000``                                                |选填。最大值：``1073741824``。 |
-| `--max_instance_memory_size` | 函数实例支持请求最大 memory（单位：MB）。 | ``128``                                           | 选填。最大值：``1073741824``。|
-| `--metrics_collector_type` | metric 收集类型。 | ``proc``                                                 |选填。取值：``proc``、``node``。 |
-| `--merge_process_enable` | 是否开启进程合并部署。 | ``true``                                                 | 选填。runtime-manager 与 function-agent 组件进程合并部署，取值：``true``、``false``。 |
-| `--is_schedule_tolerate_abnormal` | 调度是否容忍异常。 | ``false``                                                |选填。  |
-| `--system_timeout` | 系统超时时间（单位:ms）。 | ``1800000``                                              |选填。大于 ``0``，设置值小于 ``12000`` 时，重置为 ``12000``。 |
-| `--npu_collection_mode` | 采集 npu 信息模式。  | ``all``                                                  |选填。取值：``all``、 ``count``、 ``hbm``、``sfmd``、``topo``、``off``。  |
-| `--gpu_collection_enable` | 是否采集 gpu 信息。 | ``false``                                                |选填。 |
-| `--function_agent_litebus_thread` | function-agent litebus 线程数。 | ``20``                                                   | 选填。|
-| `--function_proxy_litebus_thread` | function-proxy litebus 线程数。 | ``20``                                                   | 选填。|
-| `--function_master_litebus_thread` | function-master litebus 线程数。                      | ``20``                                                   |选填。 |
-| `--function_agent_alias` | function agent 别名。 | ``""``                                                   | 选填。|
-| `--enable_print_perf` | 是否打开 function proxy 的 perf 打印。 | ``false``                                                | 选填。|
-| `--enable_meta_store` | 是否打开 meta store。 | ``false``                                                | 选填。|
+| 参数名                                  | 说明    | 默认值                                                  |  备注 |
+|--------------------------------------| ------- |------------------------------------------------------| ------------------- |
+| `-g,--driver_gateway_enable`         | function-proxy 开启端口，支持 driver 直连。 | ``false``                                                | 选填，取值：``true``、``false``，yr_master.sh 启动固定为 ``true``。 |
+| `--state_storage_type`               | 状态存储类型。 | ``datasystem``                                              | 选填，取值：``datasystem``、``disable``。 |
+| `--min_instance_cpu_size`            | 函数实例支持请求最小 cpu（单位：``1/1000`` 核）。 | ``300``                                                  |选填。 |
+| `--min_instance_memory_size`         | 函数实例支持请求最小 memory（单位：MB）。 | ``128``                                                  | 选填。|
+| `--max_instance_cpu_size`            | 函数实例支持请求最大 cpu（单位：``1/1000`` 核）。 | ``16000``                                                |选填。最大值：``1073741824``。 |
+| `--max_instance_memory_size`         | 函数实例支持请求最大 memory（单位：MB）。 | ``128``                                           | 选填。最大值：``1073741824``。|
+| `--metrics_collector_type`           | metric 收集类型。 | ``proc``                                                 |选填。取值：``proc``、``node``。 |
+| `--merge_process_enable`             | 是否开启进程合并部署。 | ``true``                                                 | 选填。runtime-manager 与 function-agent 组件进程合并部署，取值：``true``、``false``。 |
+| `--is_schedule_tolerate_abnormal`    | 调度是否容忍异常。 | ``false``                                                |选填。  |
+| `--system_timeout`                   | 系统超时时间（单位:ms）。 | ``1800000``                                              |选填。大于 ``0``，设置值小于 ``12000`` 时，重置为 ``12000``。 |
+| `--npu_collection_mode`              | 采集 npu 信息模式。  | ``all``                                                  |选填。取值：``all``、 ``count``、 ``hbm``、``sfmd``、``topo``、``off``。  |
+| `--gpu_collection_enable`            | 是否采集 gpu 信息。 | ``false``                                                |选填。 |
+| `--numa_collection_enable`           | 是否采集 numa 信息。  | ``false``                                                |选填。 |
+| `--function_agent_litebus_thread`    | function-agent litebus 线程数。 | ``20``                                                   | 选填。|
+| `--function_proxy_litebus_thread`    | function-proxy litebus 线程数。 | ``20``                                                   | 选填。|
+| `--function_master_litebus_thread`   | function-master litebus 线程数。                      | ``20``                                                   |选填。 |
+| `--function_agent_alias`             | function agent 别名。 | ``""``                                                   | 选填。|
+| `--enable_print_perf`                | 是否打开 function proxy 的 perf 打印。 | ``false``                                                | 选填。|
+| `--enable_meta_store`                | 是否打开 meta store。 | ``false``                                                | 选填。|
 | `--enable_dashboard`                 | 是否打开 dashboard。 | ``false``                                                | 选填。|
 | `--enable_collector`                 | 是否打开 collector。 | ``false``                                                | 选填。|
 | `--enable_faas_frontend`             | 是否打开 frontend。 | ``false``                                      | 选填。|
-| `--enable_jemalloc` | 是否打开 function master 和 function proxy 的 jemalloc。 | ``true``                                                 | 选填。|
-| `--massif_enable` | runtime 是否启动 massif。  | ``false``                                                | 选填。|
-| `--is_partial_watch_instances` | function-proxy 是否开启部分 watch。 | ``false``                                                | 选填。|
-| `--enable_persistence` | 是否打开 meta store 持久化到 etcd 以支持 meta store 的数据可靠性。打开后支持 function master 重启容灾。 | ``false``                                                | 选填。|
-| `--meta_store_mode` | meta store 运行模式。local 模式：数据保存在本地；etcd 模式：数据保存在 etcd 中。 | ``local``                                                | 选填，取值：``local``、``etcd``。                                                                                                         |
-| `--schedule_relaxed`    | 大于 ``0`` 表示启用宽松调度策略。当调度选中 scheduleRelaxed 个节点或者 pod 后即退出流程，不遍历所有节点或者 pod 。配置为 ``-1`` 或 ``0``  表示需要遍历所有节点或 pod ，未配置该参数时默认为 ``-1``。 warn ：当 > ``0`` 时会降低调度的准确性。 | ``1``                                                    | 选填。 |
-| `--max_priority`    | 为 ``0`` 时关闭实例优先级调度。  当 > ``0`` 时使能实例优先级调度，maxPriority 表示集群支持的实例最大优先级，最大值为 ``65535``。   | ``0``                                                    | 选填。 |
-| `--enable_preemption`    | 使能调度抢占功能（高优先级实例可以抢占低优先级被配置为可抢占的实例），仅 maxPriority > 0 生效。   | ``false``                                                | 选填。 |
-| `--local_schedule_plugins` | local scheduler 调度插件启用列表。 | 默认开启所有调度插件。                                           | 选填，支持 ``Default``，``Label``，``ResourceSelector``，``Heterogeneous``，自定义插件时，必选 ``Default``，其他三种插件可选；启用 Heterogeneous 插件需要 npu_collection_mode 值不为 ``off``。|
-| `--domain_schedule_plugins` | domain scheduler 调度插件启用列表。 | 默认开启所有调度插件。                                           | 选填，支持 ``Default``，``Label``，``ResourceSelector``，``Heterogeneous``，自定义插件时，必选 ``Default``，其他三种插件可选；启用 Heterogeneous 插件需要 npu_collection_mode 值不为 ``off``。 |
+| `--enable_jemalloc`                  | 是否打开 function master 和 function proxy 的 jemalloc。 | ``true``                                                 | 选填。|
+| `--massif_enable`                    | runtime 是否启动 massif。  | ``false``                                                | 选填。|
+| `--is_partial_watch_instances`       | function-proxy 是否开启部分 watch。 | ``false``                                                | 选填。|
+| `--enable_persistence`               | 是否打开 meta store 持久化到 etcd 以支持 meta store 的数据可靠性。打开后支持 function master 重启容灾。 | ``false``                                                | 选填。|
+| `--meta_store_mode`                  | meta store 运行模式。local 模式：数据保存在本地；etcd 模式：数据保存在 etcd 中。 | ``local``                                                | 选填，取值：``local``、``etcd``。                                                                                                         |
+| `--schedule_relaxed`                 | 大于 ``0`` 表示启用宽松调度策略。当调度选中 scheduleRelaxed 个节点或者 pod 后即退出流程，不遍历所有节点或者 pod 。配置为 ``-1`` 或 ``0``  表示需要遍历所有节点或 pod ，未配置该参数时默认为 ``-1``。 warn ：当 > ``0`` 时会降低调度的准确性。 | ``1``                                                    | 选填。 |
+| `--max_priority`                     | 为 ``0`` 时关闭实例优先级调度。  当 > ``0`` 时使能实例优先级调度，maxPriority 表示集群支持的实例最大优先级，最大值为 ``65535``。   | ``0``                                                    | 选填。 |
+| `--enable_preemption`                | 使能调度抢占功能（高优先级实例可以抢占低优先级被配置为可抢占的实例），仅 maxPriority > 0 生效。   | ``false``                                                | 选填。 |
+| `--local_schedule_plugins`           | local scheduler 调度插件启用列表。 | 默认开启所有调度插件。                                           | 选填，支持 ``Default``，``Label``，``ResourceSelector``，``Heterogeneous``，自定义插件时，必选 ``Default``，其他三种插件可选；启用 Heterogeneous 插件需要 npu_collection_mode 值不为 ``off``。|
+| `--domain_schedule_plugins`          | domain scheduler 调度插件启用列表。 | 默认开启所有调度插件。                                           | 选填，支持 ``Default``，``Label``，``ResourceSelector``，``Heterogeneous``，自定义插件时，必选 ``Default``，其他三种插件可选；启用 Heterogeneous 插件需要 npu_collection_mode 值不为 ``off``。 |
 | `--meta_store_max_flush_concurrency` | meta store 持久化到 etcd 允许最大请求并发数，当需要持久化的请求数超过该值后，会进行限流，延迟持久化。  | ``100``                                                  | 选填，大于 ``0``，建议以实际 etcd 能处理的能力为准。 |
-| `--meta_store_max_flush_batch_size` | meta store 持久化到 etcd 一次性最多允许的条数，采用分批次持久化。  | ``50``                                                   | 选填，大于 ``0``，建议以实际 etcd 能处理的能力为准。 |
-| `--fs_health_check_timeout` | 函数系统组件健康检查超时时间（单位：秒）。  | ``1``   | 选填，大于 ``0``。 |
-| `--fs_health_check_retry_interval` | 函数系统组件健康检查重试间隔（单位：秒）。  | ``0``   | 选填，大于等于 ``0``。 |
-| `--fs_health_check_retry_times` | 函数系统组件健康检查重试次数。 | ``60``   | 选填，大于 ``0``。 |
+| `--meta_store_max_flush_batch_size`  | meta store 持久化到 etcd 一次性最多允许的条数，采用分批次持久化。  | ``50``                                                   | 选填，大于 ``0``，建议以实际 etcd 能处理的能力为准。 |
+| `--fs_health_check_timeout`          | 函数系统组件健康检查超时时间（单位：秒）。  | ``1``   | 选填，大于 ``0``。 |
+| `--fs_health_check_retry_interval`   | 函数系统组件健康检查重试间隔（单位：秒）。  | ``0``   | 选填，大于等于 ``0``。 |
+| `--fs_health_check_retry_times`      | 函数系统组件健康检查重试次数。 | ``60``   | 选填，大于 ``0``。 |
 
 * npu_collection_mode：count 模式只采集 NPU 卡数量信息；hbm 模式采集 NPU 卡数量以及 HBM 容量等信息；sfmd 模式采集 NPU 卡数量、HBM 容量以及 NPU 卡 IP 信息；topo 模式采集 NPU 卡数量、HBM 容量以及 NPU 卡 topo 信息；all 模式采集以上所有 NPU 信息；off 模式不采集任何 NPU 信息。
 * local_schedule_plugins 和 domain_schedule_plugins：用户自定义插件列表时，建议两个参数使用一致的调度插件列表，例如：--local_schedule_plugins='["Default", "Heterogeneous"]' --domain_schedule_plugins='["Default", "Heterogeneous"]'。

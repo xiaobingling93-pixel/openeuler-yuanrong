@@ -189,6 +189,12 @@ message Bundle {
     repeated string      labels      = 2;  // "key:value" or "key2"
 }
 
+enum BindStrategy {
+  BIND_None = 0;
+  BIND_Spread = 1;
+  BIND_Pack = 2;
+}
+
 enum GroupPolicy {
     None = 0;
     Spread = 1;

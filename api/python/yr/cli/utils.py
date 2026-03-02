@@ -22,7 +22,6 @@ import random
 import socket
 import ssl
 import string
-import sys
 import time
 import urllib.request
 from contextlib import closing
@@ -32,17 +31,13 @@ from typing import Optional
 logger = logging.getLogger(__name__)
 
 
-def get_ip() -> str:
-    hostname = socket.gethostname()
-    ip_list = socket.getaddrinfo(hostname, None)
-
-    for ip_info in ip_list:
-        ip = ip_info[4][0]
-        if ip != "127.0.0.1" and not ip.startswith("::") and "." in ip:
-            return ip
-
-    logger.error("Failed to get IP address")
-    sys.exit(1)
+def get_ip(dst=("8.8.8.8", 80)) -> str:
+    s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    try:
+        s.connect(dst)
+        return s.getsockname()[0]
+    finally:
+        s.close()
 
 
 def trim_hostname() -> str:

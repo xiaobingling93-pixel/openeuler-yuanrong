@@ -25,6 +25,30 @@
 
 namespace YR {
 /*!
+   @brief Configuration for resource binding affinity.
+*/
+struct BindOptions {
+    /*!
+       @brief Resource type to bind to. default type is ``None``.
+
+       - ``'None'``: No binding.
+
+       - ``'NUMA'``: Bind to NUMA nodes.
+    */
+    std::string resource = "NONE";
+    /*!
+       @brief Binding strategy for the specified resource, default strategy is ``None``.
+
+       - ``'None'``: Equivalent to `Spread`.
+
+       - ``'PACK'``: Pack multiple instances into the same resource units as much as possible.
+
+       - ``'SPREAD'``: Distribute multiple instances across different resource units as much as possible.
+    */
+    std::string strategy = "NONE";
+};
+
+/*!
    @brief Configuration options for grouped instance scheduling.
 
    The `GroupOptions` structure defines parameters for the lifecycle management of grouped instances, including timeout
@@ -47,19 +71,23 @@ struct GroupOptions {
     */
     bool sameLifecycle = true;
     /*!
-       @brief The strategy to create the group, defalut strategy is ``None``
+       @brief The strategy to create the group, default strategy is ``None``.
             
-            - ``'None'``: No strategy.
+        - ``'None'``: No strategy.
 
-            - ``'PACK'``: Pack multiple instances into the same node as much as possible.
-            
-            - ``'SPREAD`'': Distribute multiple instances across different nodes as much as possible.
-            
-            - ''`STRICT_PACK`'': All instances must be placed on the same node, otherwise creation fails.
-           
-            - ''`STRICT_SPREAD`'': All instances must be placed on different nodes, otherwise creation fails.
+        - ``'PACK'``: Pack multiple instances into the same node as much as possible.
+
+        - ``'SPREAD'``: Distribute multiple instances across different nodes as much as possible.
+
+        - ``'STRICT_PACK'``: All instances must be placed on the same node, otherwise creation fails.
+
+        - ``'STRICT_SPREAD'``: All instances must be placed on different nodes, otherwise creation fails.
     */
     std::string strategy = "None";
+    /**
+     * @brief Resource binding options. Used to specify resource-level binding strategy.
+     */
+    BindOptions bind;
 };
 
 /**

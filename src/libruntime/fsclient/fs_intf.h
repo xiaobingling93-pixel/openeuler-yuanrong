@@ -65,6 +65,7 @@ using LeaseResponse = ::lease_service::LeaseResponse;
 
 using CreateRequests = ::core_service::CreateRequests;
 using GroupOptions = ::core_service::GroupOptions;
+using BindOptions = ::core_service::BindOptions;
 using CreateResponses = ::core_service::CreateResponses;
 
 using CreateRequest = ::core_service::CreateRequest;

@@ -179,6 +179,14 @@ YR::Libruntime::InstanceRange BuildInstanceRange(const YR::InstanceRange &instan
     return range;
 }
 
+YR::Libruntime::BindOpts BuildBindOpts(const YR::BindOptions &opts)
+{
+    YR::Libruntime::BindOpts bindOpts;
+    bindOpts.resource = opts.resource;
+    bindOpts.strategy = opts.strategy;
+    return bindOpts;
+}
+
 YR::Libruntime::SetParam BuildSetParam(const YR::SetParam &setParam)
 {
     YR::Libruntime::SetParam dsSetParam;
@@ -1076,6 +1084,7 @@ void ClusterModeRuntime::GroupCreate(const std::string &name, GroupOptions &opts
     libOpts.groupName = name;
     libOpts.sameLifecycle = opts.sameLifecycle;
     libOpts.strategy = opts.strategy;
+    libOpts.bind = BuildBindOpts(opts.bind);
     auto errInfo = GetLibRuntime()->GroupCreate(name, libOpts);
     if (!errInfo.OK()) {
         throw YR::Exception(static_cast<int>(errInfo.Code()), static_cast<int>(errInfo.MCode()), errInfo.Msg());

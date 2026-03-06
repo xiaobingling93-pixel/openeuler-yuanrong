@@ -366,6 +366,18 @@ TEST_F(ApiTest, GroupTest)
     ASSERT_EQ(group.GetGroupName(), "gName");
 }
 
+TEST_F(ApiTest, GroupBindOptionsTest)
+{
+    YR::GroupOptions gOpts;
+    std::string gName = "gName";
+    gOpts.bind.resource = "NUMA";
+    gOpts.bind.strategy = "SPREAD";
+    YR::Group group(gName, gOpts);
+    ASSERT_EQ(group.GetGroupName(), "gName");
+    ASSERT_EQ(group.groupOpts.bind.resource, "NUMA");
+    ASSERT_EQ(group.groupOpts.bind.strategy, "SPREAD");
+}
+
 TEST_F(ApiTest, HeteroDeleteTest)
 {
     std::vector<std::string> objectIds;

@@ -162,6 +162,7 @@ cc_test(
     "libruntime/group_manager_test.cpp",
     "libruntime/function_group_test.cpp",
     "libruntime/range_group_test.cpp",
+    "libruntime/named_group_test.cpp",
   ],
   deps = [
     "@gtest//:gtest_main",

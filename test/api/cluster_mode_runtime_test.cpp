@@ -789,6 +789,22 @@ TEST_F(ClusterModeRuntimeTest, TestGroupCreateSuccessfully)
     EXPECT_NO_THROW(rt->GroupCreate("111", gOpts));
 }
 
+TEST_F(ClusterModeRuntimeTest, TestGroupCreateSuccessfullyWithBindOptions)
+{
+    YR::GroupOptions gOpts;
+    std::string gName = "gName";
+    gOpts.bind.resource = "NUMA";
+    gOpts.bind.strategy = "SPREAD";
+    YR::Libruntime::GroupOpts libOpts;
+    EXPECT_CALL(*lr.get(), GroupCreate("gName", _))
+    .WillOnce(::testing::DoAll(
+        ::testing::SaveArg<1>(&libOpts),  // 保存第二个参数
+        Return(YR::Libruntime::ErrorInfo())));
+    EXPECT_NO_THROW(rt->GroupCreate("gName", gOpts));
+    ASSERT_EQ(libOpts.bind.resource, "NUMA");
+    ASSERT_EQ(libOpts.bind.strategy, "SPREAD");
+}
+
 TEST_F(ClusterModeRuntimeTest, TestGroupCreateFailed)
 {
     YR::GroupOptions gOpts;

@@ -9,6 +9,7 @@
    system-metrics
    alarm-metrics
    export-metrics
+   application-metrics
 ```
 
 指标是一组时间序列数据，用于监控 openYuanrong 系统及应用的健康状况和性能，以便及时发现和解决问题。当前 openYuanrong 支持的指标类型如下：

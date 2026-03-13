@@ -90,7 +90,7 @@ html {
     
     /* 整体横向滚动 */
     overflow-x: auto !important;
-    overflow-y: hidden !important;
+    overflow-y: visible !important;  /* 修改：从 hidden 改为 visible */
     scrollbar-width: none !important;
     -webkit-overflow-scrolling: touch !important;
 }
@@ -126,4 +126,47 @@ html {
 .bd-header__inner > .navbar-header-items .version-switcher__container,
 .bd-header__inner > .navbar-header-items [class*="version-switcher"] {
     flex: 0 0 auto !important;
+}
+
+/* ========== 6. 关键新增：version-switcher 按钮向左移动 + 下拉框层级置顶 ========== */
+
+/* version-switcher 按钮向左移动 */
+.bd-header__inner .navbar-header-items__end {
+    margin-right: 1rem !important;  /* 右边距，把按钮往左推 */
+}
+
+/* 或者更精确地针对 switcher 容器 */
+.bd-header__inner .version-switcher__container,
+.bd-header__inner [class*="version-switcher__container"] {
+    margin-right: 0.5rem !important;  /* 右边距 */
+    /* 或者使用 transform 微调 */
+    /* transform: translateX(-10px) !important; */
+}
+
+/* 下拉菜单使用 fixed 定位突破父容器限制 */
+.bd-header__inner .version-switcher__container .dropdown-menu,
+.bd-header__inner [class*="version-switcher"] .dropdown-menu,
+.bd-header__inner .version-switcher__menu {
+    position: fixed !important;
+    z-index: 99999 !important;
+    top: 60px !important;  /* 根据你的页眉高度调整 */
+    right: 1.5rem !important;  /* 配合按钮左移，下拉框也相应调整 */
+    left: auto !important;
+    transform: none !important;
+}
+
+/* 确保 switcher 容器本身有正确的定位上下文 */
+.bd-header__inner .version-switcher__container,
+.bd-header__inner [class*="version-switcher__container"] {
+    position: static !important;
+}
+
+/* 更精确的选择器 */
+.navbar-header-items__end .version-switcher__container .dropdown-menu.show,
+.navbar-header-items__end [class*="version-switcher"] .dropdown-menu.show {
+    position: fixed !important;
+    top: 60px !important;
+    right: 1.5rem !important;
+    left: auto !important;
+    z-index: 99999 !important;
 }

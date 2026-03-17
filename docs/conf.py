@@ -15,8 +15,11 @@
 import sys
 import os
 import logging
-from pathlib import Path
 import datetime
+from pathlib import Path
+
+sys.path.append(os.path.abspath('.'))
+from icons import ICONS
 
 logging.basicConfig(
     format="%(asctime)s - %(name)s - %(levelname)s - %(message)s", level=logging.INFO
@@ -148,6 +151,11 @@ html_sidebars = {
     "**": ["search-button-field.html", "sbt-sidebar-nav.html"]
 }
 
+# 使用自定义首页模板
+html_additional_pages = {
+    'index': 'custom-index.html'
+}
+
 # -----------------------------------------------------------------------------
 #   Myst extensions
 # -----------------------------------------------------------------------------
@@ -173,3 +181,8 @@ myst_enable_extensions = [
 # -----------------------------------------------------------------------------
 breathe_projects = {"openYuanrong": "./../.doxygendocs/xml"}
 breathe_default_project = "openYuanrong"
+
+
+html_context = {
+    **ICONS,
+}

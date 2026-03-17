@@ -177,7 +177,13 @@ function build_python_sdk() {
     API_DIR="$BASE_DIR/api"
     cd $API_DIR/python
     rm -rf build/ dist/ *.egg-info
-    SETUP_TYPE= $PYTHON3_SDK_BIN_PATH setup.py bdist_wheel
+    # Determine python runtime version for services.yaml
+    if [ "$MULTI_PYTHON_VERSION" == "true" ]; then
+        PYTHON_RUNTIME_VERSION=python3.11
+    else
+        PYTHON_RUNTIME_VERSION=$PYTHON3_BIN_PATH
+    fi
+    SETUP_TYPE= PYTHON_RUNTIME_VERSION=$PYTHON_RUNTIME_VERSION $PYTHON3_SDK_BIN_PATH setup.py bdist_wheel
     mkdir -p ${OUTPUT_DIR}
     cp -ar $API_DIR/python/dist/*whl $BASE_DIR/output/
     chmod 750 $BASE_DIR/output/*.whl
@@ -362,6 +368,14 @@ if [ "$BAZEL_COMMAND" == "build" ]; then
 fi
 
 if [ "$PACKAGE_ALL" == "true" ]; then
+    # Determine the python version to use in package
+    if [ "$MULTI_PYTHON_VERSION" == "true" ]; then
+        # Default to python3.11 when building multiple versions
+        PACKAGE_PYTHON_VERSION=python3.11
+    else
+        # Use the specified python version
+        PACKAGE_PYTHON_VERSION=$PYTHON3_BIN_PATH
+    fi
 
     start=$(date +%s)
     bash ${BASE_DIR}/scripts/package_yuanrong.sh -v ${BUILD_VERSION}
@@ -370,16 +384,16 @@ if [ "$PACKAGE_ALL" == "true" ]; then
 
     cd "$BASE_DIR"/api/python
     rm -rf build/ dist/ *.egg-info
-    SETUP_TYPE=dashboard $PYTHON3_SDK_BIN_PATH setup.py bdist_wheel
+    SETUP_TYPE=dashboard PYTHON_RUNTIME_VERSION=${PACKAGE_PYTHON_VERSION} $PYTHON3_SDK_BIN_PATH setup.py bdist_wheel
     cp -ar $API_DIR/python/dist/*whl $BASE_DIR/output/
     rm -rf build/ dist/ *.egg-info
-    SETUP_TYPE=faas $PYTHON3_SDK_BIN_PATH setup.py bdist_wheel
+    SETUP_TYPE=faas PYTHON_RUNTIME_VERSION=${PACKAGE_PYTHON_VERSION} $PYTHON3_SDK_BIN_PATH setup.py bdist_wheel
     cp -ar $API_DIR/python/dist/*whl $BASE_DIR/output/
     rm -rf build/ dist/ *.egg-info
-    SETUP_TYPE=sdk_cpp $PYTHON3_SDK_BIN_PATH setup.py bdist_wheel
+    SETUP_TYPE=sdk_cpp PYTHON_RUNTIME_VERSION=${PACKAGE_PYTHON_VERSION} $PYTHON3_SDK_BIN_PATH setup.py bdist_wheel
     cp -ar $API_DIR/python/dist/*whl $BASE_DIR/output/
     rm -rf build/ dist/ *.egg-info
-    SETUP_TYPE=runtime $PYTHON3_SDK_BIN_PATH setup.py bdist_wheel
+    SETUP_TYPE=runtime PYTHON_RUNTIME_VERSION=${PACKAGE_PYTHON_VERSION} $PYTHON3_SDK_BIN_PATH setup.py bdist_wheel
     cp -ar $API_DIR/python/dist/*whl $BASE_DIR/output/
     end2=$(date +%s)
     echo "Package openyuanrong.whl elapsed: $((end2 - end1)) seconds"

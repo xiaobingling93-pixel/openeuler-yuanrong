@@ -228,6 +228,9 @@ def copy_openyuanrong_cpp_sdk(ctx):
 
 def copy_openyuanrong(ctx):
     """copy openyuanrong"""
+    # Get python runtime version from environment variable
+    python_runtime_version = os.getenv("PYTHON_RUNTIME_VERSION", "python3.11")
+
     # Copy third_party from source tree
     third_party_files_to_include = []
     third_party_source_dir = os.path.join(ROOT_DIR, "yr", "third_party")
@@ -247,9 +250,17 @@ def copy_openyuanrong(ctx):
         for i in fs:
             deploy_files_to_include.append(os.path.join(root, i))
     for filename in deploy_files_to_include:
-        copy_file(
-            os.path.join(ctx.build_lib, "yr/deploy/process"), filename, deploy_dir
-        )
+        target_dir = os.path.join(ctx.build_lib, "yr/deploy/process")
+        copy_file(target_dir, filename, deploy_dir)
+        # Update python runtime version in services.yaml
+        if "services.yaml" in filename:
+            dst = os.path.join(target_dir, os.path.relpath(filename, deploy_dir))
+            with open(dst, 'r') as f:
+                content = f.read()
+            import re
+            new_content = re.sub(r'runtime: python3\.\d+', f'runtime: {python_runtime_version}', content)
+            with open(dst, 'w') as f:
+                f.write(new_content)
 
 
 def run_ext(ctx):

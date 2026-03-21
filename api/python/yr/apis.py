@@ -288,7 +288,8 @@ def _recurse(obj, ref_obj):
     if isinstance(obj, list):
         return [_recurse(item, ref_obj) for item in obj]
     if isinstance(obj, dict):
-        return {k: _recurse(v, ref_obj) for k, v in obj.items()}
+        # 保持原始字典类型（如 OrderedDict）
+        return type(obj)((k, _recurse(v, ref_obj)) for k, v in obj.items())
     if isinstance(obj, set):
         new_set = set()
         for item in obj:

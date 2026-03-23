@@ -34,7 +34,7 @@ labels:,control_plane_port_min:,control_plane_port_max:,data_plane_port_min:,dat
 ds_worker_unique_enable,log_level:,\
 enable_distributed_master,\
 log_root:,fs_log_path:,fs_log_level:,fs_log_compress_enable:,fs_log_rolling_max_size:,fs_log_rolling_max_files:,fs_log_rolling_retention_days:,\
-fs_log_async_log_buf_secs:,fs_log_async_log_max_queue_size:,fs_log_async_log_thread_count:,fs_also_log_to_stderr:,\
+fs_log_async_log_buf_secs:,fs_log_async_log_max_queue_size:,fs_log_async_log_thread_count:,fs_also_log_to_stderr:,log_use_utc_time:,\
 runtime_log_level:,runtime_log_path:,runtime_log_rolling_max_size:,runtime_log_rolling_max_files:,runtime_default_config:,etcd_log_path:,\
 runtime_std_rolling_enable:,\
 ds_log_level:,ds_log_path:,ds_log_rolling_max_size:,ds_log_rolling_max_files:,\
@@ -44,8 +44,9 @@ ds_spill_enable:,ds_spill_directory:,ds_spill_size_limit:,\
 ds_rpc_thread_num:,ds_node_timeout_s:,ds_node_dead_timeout_s:,\
 ds_heartbeat_interval_ms:,ds_client_dead_timeout_s:,ds_max_client_num:,ds_memory_reclamation_time_second:,\
 ds_arena_per_tenant:,ds_enable_fallocate:,ds_enable_huge_tlb:,ds_enable_thp:,\
-enable_faas_frontend:,faas_frontend_http_port:,faas_frontend_grpc_port:,enable_function_scheduler:,enable_event:,\
-enable_meta_service:,meta_service_port:,\
+enable_faas_frontend:,faas_frontend_http_port:,faas_frontend_grpc_port:,enable_function_scheduler:,enable_event:,enable_function_token_auth:,\
+enable_meta_service:,meta_service_port:,enable_event:,\
+enable_iam_server:,iam_server_port:,iam_token_expired_time_span:,iam_credential_type:,\
 function_agent_port:,function_proxy_port:,\
 function_proxy_grpc_port:,global_scheduler_port:,runtime_init_port:,\
 function_agent_litebus_thread:,function_master_litebus_thread:,function_proxy_litebus_thread:,\
@@ -57,12 +58,14 @@ ds_master_port:,\
 curve_key_path:,runtime_ds_auth_enable:,runtime_ds_encrypt_enable:,runtime_ds_connect_timeout:,\
 ds_component_auth_enable:,etcd_ssl_base_path:,cache_storage_auth_type:,cache_storage_auth_enable:,\
 is_partial_watch_instances:,\
-ssl_base_path:,ssl_enable:,ssl_root_file:,ssl_cert_file:,ssl_key_file:,\
+ssl_base_path:,ssl_enable:,ssl_root_file:,ssl_cert_file:,ssl_key_file:,frontend_ssl_enable:,frontend_client_auth_type:,meta_service_ssl_enable:,\
+meta_service_client_auth_type:,\
+iam_ssl_enable:,\
 runtime_max_heartbeat_timeout_times:,runtime_port_num:,runtime_recover_enable:,runtime_direct_connection_enable:,runtime_instance_debug_enable:,is_protomsg_to_runtime:,massif_enable:,\
 etcd_mode:,etcd_ip:,etcd_port:,etcd_server_cert_path:,etcd_client_cert_path:,etcd_client_cert_file:,etcd_client_key_file:,\
 etcd_peer_port:,etcd_compact_retention:,etcd_auth_type:,etcd_cert_file:,etcd_key_file:,etcd_ca_file:,\
 local_schedule_plugins:,domain_schedule_plugins:,enable_print_perf:,enable_meta_store:,enable_persistence:,enable_jemalloc:,enable_inherit_env:,\
-etcd_proxy_enable:,etcd_proxy_nums:,etcd_proxy_port:,etcd_no_fsync:,node_id:,function_agent_alias:,function_proxy_unique_enable,\
+etcd_proxy_enable:,etcd_proxy_nums:,etcd_proxy_port:,etcd_no_fsync:,node_id:,function_agent_alias:,function_proxy_unique_enable,function_proxy_merge_process_enable:,\
 enable_separated_redirect_runtime_std:,schedule_relaxed:,user_log_export_mode:,\
 max_priority:,enable_preemption:,kill_process_timeout_seconds:,\
 dashboard_port:,dashboard_grpc_port:,enable_dashboard:,enable_collector:,\
@@ -72,16 +75,20 @@ memory_detection_interval:,oom_kill_enable:,oom_kill_control_limit:,oom_consecut
 user_log_auto_flush_interval_ms:,user_log_buffer_flush_threshold:,\
 user_log_rolling_size_limit_mb:,user_log_rolling_file_count_limit:,\
 fs_health_check_retry_times:,fs_health_check_retry_interval:,fs_health_check_timeout:,disable_nc_check,\
-runtime_home_dir:,\
+runtime_home_dir:,enable_dposix_uds:,dposix_uds_path:,local_ip:,\
 etcd_table_prefix:,etcd_target_name_override:,\
 ds_l2_cache_type:,ds_sfs_path:,ds_log_monitor_enable:,zmq_chunk_sz:,enable_lossless_data_exit_mode:,\
 meta_store_max_flush_concurrency:,meta_store_max_flush_batch_size:,\
 runtime_metrics_config:,\
+log_expiration_enable:,log_expiration_time_threshold:,log_expiration_cleanup_interval:,log_expiration_max_file_count:,\
+enable_traefik_registry:,traefik_domain:,traefik_etcd_prefix:,traefik_lease_ttl:,traefik_http_entrypoint:,traefik_enable_tls:,traefik_servers_transport:,\
+meta_service_address:,\
+system_tenant_id:,\
 help"
 FS_LOG_CONFIG="{\"filepath\": \"{{logConfigPath}}\",\"level\": \"{{logLevel}}\",\"compress\": {{logCompressEnable}}, \
 \"rolling\": {\"maxsize\": {{logRollingMaxSize}},\"maxfiles\": {{logRollingMaxFiles}},\"retentionDays\": {{logRollingRetentionDays}}}, \
 \"async\": {\"logBufSecs\": {{logAsyncBufSecs}},\"maxQueueSize\": {{logAsyncMaxQueueSize}},\"threadCount\": {{logAsyncThreadCount}}}, \
-\"alsologtostderr\": {{logAlsologtostderr}}}"
+\"alsologtostderr\": {{logAlsologtostderr}}, \"useUtcTime\": {{logUseUtcTime}}}"
 FAAS_LOG_CONFIG="{\"filepath\": \"{{logConfigPath}}\",\"level\": \"{{logLevel}}\"}"
 LOG_ROTATE_CONFIG="{{logConfigPath}}/runtime-*.out {{logConfigPath}}/runtime-*.err {
     size {{logRollingMaxSize}}M
@@ -128,6 +135,13 @@ STATUS_COLLECT_ENABLE="false"
 STATUS_COLLECT_INTERVAL=300
 ENABLE_TRACE=false
 TRACE_CONFIG=""
+ENABLE_TRAEFIK_REGISTRY=false
+TRAEFIK_DOMAIN=""
+TRAEFIK_ETCD_PREFIX="traefik"
+TRAEFIK_LEASE_TTL=300000
+TRAEFIK_HTTP_ENTRYPOINT="websecure"
+TRAEFIK_ENABLE_TLS="true"
+TRAEFIK_SERVERS_TRANSPORT="yr-backend-tls@file"
 RUNTIME_TRACE_CONFIG=""
 ENABLE_METRICS=true
 METRICS_CONFIG=""
@@ -156,6 +170,7 @@ FS_LOG_ASYNC_LOG_MAX_QUEUE_SIZE=51200
 FS_LOG_ASYNC_LOG_THREAD_COUNT=1
 FS_ALSO_LOG_TO_STDERR=false
 FS_LOG_ROLLING_RETENTION_DAYS=30
+YR_LOG_USE_UTC_TIME=false
 RUNTIME_LOG_PATH=""
 RUNTIME_LOG_LEVEL="INFO"
 RUNTIME_LOG_ROLLING_MAX_SIZE=40
@@ -179,6 +194,10 @@ DRIVER_GATEWAY_ENABLE="false"
 FUNCTION_AGENT_PORT=58866
 FUNCTION_PROXY_PORT=22772
 FUNCTION_PROXY_GRPC_PORT=22773
+FUNCTION_PROXY_EXEC_GRPC_PORT=22774
+LOCAL_IP=""
+ENABLE_DPOSIX_UDS=false
+DPOSIX_UDS_PATH=""
 GLOBAL_SCHEDULER_PORT=22770
 RUNTIME_INIT_PORT=21006
 DASHBOARD_PORT=9080
@@ -197,6 +216,7 @@ DASHBOARD_SSL_CERT_FILE="server.crt"
 DASHBOARD_SSL_KEY_FILE="server.key"
 METRICS_COLLECTOR_TYPE="proc"
 MERGE_PROCESS_ENABLE="true"
+FUNCTION_PROXY_MERGE_PROCESS_ENABLE="false"
 RUNTIME_HEARTBEAT_ENABLE=true
 RUNTIME_HEARTBEAT_TIMEOUT_MS=100000
 RUNTIME_MAX_HEARTBEAT_TIMEOUT_TIMES=18
@@ -225,7 +245,6 @@ SCHEDULE_RELAXED=-1
 ENABLE_PREEMPTION=false
 FUNCTION_PROXY_UNREGISTER_WHILE_STOP=true
 MAX_PRIORITY=0
-RUNTIME_METRICS_CONFIG="false"
 # Use snlib to adapt old or new runtime params
 if [ -d "${BASE_DIR}/../../runtime/service/cpp/snlib" ]; then
   IS_PROTOMSG_TO_RUNTIME=false
@@ -240,6 +259,10 @@ ENABLE_COLLECTOR="false"
 
 ENABLE_META_STORE="false"
 ENABLE_META_SERVICE="false"
+ENABLE_IAM_SERVER="false"
+IAM_SERVER_PORT=31112
+IAM_TOKEN_EXPIRED_TIME_SPAN=86400
+IAM_CREDENTIAL_TYPE="token"
 ENABLE_PERSISTENCE="false"
 META_STORE_MODE="local"
 META_STORE_EXCLUDED_KEYS=","
@@ -255,6 +278,7 @@ FAAS_FRONTEND_HTTP_PORT=8888
 FAAS_FRONTEND_GRPC_PORT=31223
 ENABLE_FUNCTION_SCHEDULER="false"
 ENABLE_EVENT="false"
+ENABLE_FUNCTION_TOKEN_AUTH="false"
 # Data System Configuration
 DS_MASTER_IP=""
 DS_MASTER_PORT=12123
@@ -311,6 +335,14 @@ STS_CONFIG="{}"
 SSL_BASE_PATH=""
 SCC_ENABLE="false"
 SSL_ENABLE="false"
+FRONTEND_SSL_ENABLE="false"
+FRONTEND_CLIENT_AUTH_TYPE=RequireAndVerifyClientCert
+META_SERVICE_SSL_ENABLE="false"
+META_SERVICE_CLIENT_AUTH_TYPE=RequireAndVerifyClientCert
+META_SERVICE_ADDRESS=""
+# iam ssl config - when IAM_SSL_ENABLE=true or SSL_ENABLE=true, iam_server will enable mTLS
+# certificate paths are reused from global SSL_BASE_PATH, SSL_ROOT_FILE, SSL_CERT_FILE, SSL_KEY_FILE
+IAM_SSL_ENABLE="false"
 SSL_ROOT_FILE="ca.crt"
 SSL_CERT_FILE="module.crt"
 SSL_KEY_FILE="module.key"
@@ -352,6 +384,14 @@ USER_LOG_AUTO_FLUSH_INTERVAL_MS=10000
 USER_LOG_BUFFER_FLUSH_THRESHOLD=1048576
 USER_LOG_MAX_ROLLING_FILE_SIZE_MB=100
 USER_LOG_MAX_ROLLING_LOG_FILE_NUM=100
+
+LOG_EXPIRATION_ENABLE="true"
+LOG_EXPIRATION_TIME_THRESHOLD=7200   # 2 hours in seconds
+LOG_EXPIRATION_CLEANUP_INTERVAL=600  # 10 minutes in seconds
+LOG_EXPIRATION_MAX_FILE_COUNT=256
+
+# System Tenant Configuration
+SYSTEM_TENANT_ID="0"
 
 function usage() {
   echo -e "General Options:"
@@ -403,6 +443,7 @@ function usage() {
   echo -e "     --fs_log_async_log_max_queue_size                   async log max queue size (default 51200)"
   echo -e "     --fs_log_async_log_thread_count                     async log thread count (default 1)"
   echo -e "     --fs_also_log_to_stderr                             log to stderr for function system(default false)"
+  echo -e "     --log_use_utc_time                                  use UTC time for log, options: true/false (default false)"
   echo -e "     --runtime_log_path                                  log subdirectory for runtime"
   echo -e "     --runtime_log_level                                 runtime log level"
   echo -e "     --runtime_log_rolling_max_size                      rolling log max size for runtime, unit: MB (default 40)"
@@ -420,6 +461,10 @@ function usage() {
   echo -e "     --ds_log_rolling_max_files                          rolling log max files for data system (default 32)"
   echo -e "     --ds_log_monitor_enable                             enable data system log monitor(default false)"
   echo -e "     --etcd_log_path                                     log subdirectory for etcd"
+  echo -e "     --log_expiration_enable                             enable log expiration (default true)"
+  echo -e "     --log_expiration_time_threshold                     log expiration time threshold, unit second (default 432000, 5 days)"
+  echo -e "     --log_expiration_cleanup_interval                   log expiration cleanup interval, unit second (default 600, 10 minutes)"
+  echo -e "     --log_expiration_max_file_count                     log expiration max file count (default 256)"
   echo -e "Function System Options:"
   echo -e "     --min_instance_cpu_size                             instance min CPU size in request allowed (unit:1/1000 core, default 300)"
   echo -e "     --min_instance_memory_size                          instance min memory size in request allowed (unit:MB, default 128)"
@@ -428,6 +473,7 @@ function usage() {
   echo -e "     --function_agent_port                               function agent port (default 58866)"
   echo -e "     --function_proxy_port                               function proxy port (default 22772)"
   echo -e "     --function_proxy_grpc_port                          function proxy port for driver (default 22773)"
+  echo -e "     --function_proxy_exec_grpc_port                     session gRPC port for ExecStream (default 22774)"
   echo -e "     --global_scheduler_port                             global scheduler port (default 22770)"
   echo -e "     --runtime_init_port                                 runtime init port (default 21006)"
   echo -e "     --dashboard_port                                    dashboard port (default 9080)"
@@ -467,11 +513,16 @@ function usage() {
   echo -e "     --function_master_litebus_thread                    function master litebus thread count(default 20)"
   echo -e "     --function_proxy_litebus_thread                     function proxy litebus thread count(default 20)"
   echo -e "     --function_agent_alias                              function agent alias(default empty)"
+  echo -e "     --function_proxy_merge_process_enable               enable function proxy merge process mode(default false)"
   echo -e "     --enable_print_perf                                 function proxy enable to print perf info"
   echo -e "     --enable_dashboard                                  for to enable dashboard(default false)"
   echo -e "     --enable_collector                                  for to enable collector(default false)"
   echo -e "     --enable_meta_service                               for to enable meta service(default false)"
   echo -e "     --meta_service_port                                 meta_service port (default 31111)"
+  echo -e "     --enable_iam_server                                 for to enable iam server(default false)"
+  echo -e "     --iam_server_port                                   iam_server port (default 31112)"
+  echo -e "     --iam_token_expired_time_span                       iam token expired time span in seconds, 0 means never expire (default 86400)"
+  echo -e "     --iam_credential_type                               iam credential type: token or ak_sk (default token)"
   echo -e "     --enable_meta_store                                 for to enable meta store(default false)"
   echo -e "     --enable_persistence                                enable meta store to persist into etcd (default false)"
   echo -e "     --meta_store_max_flush_concurrency                  max flush concurrency for meta store backup(default 1000)"
@@ -487,12 +538,17 @@ function usage() {
   echo -e "     --faas_frontend_http_port                           faas frontend http port (default 8888)"
   echo -e "     --faas_frontend_grpc_port                           faas frontend grpc port (default 31223)"
   echo -e "     --enable_function_scheduler                         enable function scheduler, options:true/false (default false)"
+  echo -e "     --enable_function_token_auth                        enable function token auth, options:true/false (default false)"
   echo -e "     --schedule_relaxed                                  enable the relaxed scheduling policy. When the relaxed number of available nodes or pods is selected, the scheduling progress exits without traversing all nodes or pods.(default 1)"
   echo -e "     --enable_event                                      faas frontend enable stream event mode"
   echo -e "     --max_priority                                      schedule max priority (default 0)"
   echo -e "     --enable_preemption                                 enable schedule preemption while higher priority, only valid while max_priority > 0 (default false)"
   echo -e "     --kill_process_timeout_seconds                      time interval send kill -9 after send kill -2, unit second(default 5)"
   echo -e "     --runtime_home_dir                                  runtime home dir(default is Home environment variable of the OpenYuanrong component deployment user)"
+  echo -e "     --enable_dposix_uds                                 enable DPOSIX UDS for runtime and function proxy communication (default false)"
+  echo -e "     --dposix_uds_path                                   dposix uds path, should be absolute path, if not set, will use deploy_path/NODE_ID/dposix_uds as default"
+  echo -e "     --local_ip                                          specify in-node communication IP, usually set to 127.0.0.1"
+  echo -e "     --system_tenant_id                                  system tenant ID for querying all tenants' instances (default 0)"
   echo -e "Data System Options:"
   echo -e "     --ds_master_port                                    data system master listening port (default 12123)"
   echo -e "     --ds_worker_port                                    data system worker listening port (default 31501)"
@@ -544,6 +600,12 @@ function usage() {
   echo -e "TLS Config Options:"
   echo -e "     --ssl_base_path                                     ssl base path, configure absolute path"
   echo -e "     --ssl_enable                                        ssl enabled, options: true/false (default false)"
+  echo -e "     --frontend_ssl_enable                               frontend ssl enabled, options: true/false (default false)"
+  echo -e "     --frontend_client_auth_type                         frontend client authentication type, options: RequireAndVerifyClientCert/NoClientCert (default RequireAndVerifyClientCert)"
+  echo -e "     --meta_service_ssl_enable                           meta_service ssl enabled, options: true/false (default false)"
+  echo -e "     --meta_service_client_auth_type                     meta_service client authentication type, options: RequireAndVerifyClientCert/NoClientCert (default RequireAndVerifyClientCert)"
+  echo -e "     --meta_service_address                              meta_service address used by frontend forwarding, format ip:port (default empty, auto use ip:meta_service_port)"
+  echo -e "     --iam_ssl_enable                                    iam_server mTLS enabled independently, options: true/false (default false). Note: iam_server mTLS is also enabled when global ssl_enable=true"
   echo -e "     --ssl_root_file                                     ssl root ca file name, default is ca.crt"
   echo -e "     --ssl_cert_file                                     ssl module cert file name, default is module.crt"
   echo -e "     --ssl_key_file                                      ssl module key file name, default is module.key"
@@ -577,6 +639,7 @@ function parse_opt() {
     -o|--master_info_output) MASTER_INFO_OUT_FILE=$2 && shift 2 ;;
     -w|--ds_worker_unique_enable) DS_WORKER_UNIQUE_ENABLE=true && shift 1 ;;
     -f|--function_proxy_unique_enable) FUNCTION_PROXY_UNIQUE_ENABLE=true && shift 1 ;;
+    --function_proxy_merge_process_enable) FUNCTION_PROXY_MERGE_PROCESS_ENABLE=true && shift 2 ;;
     -e|--enable_multi_master) ENABLE_MULTI_MASTER=true && shift 1 ;;
     -h|--help) usage && exit 0 ;;
     --master) ENABLE_MASTER="true" && shift 1 ;;
@@ -615,6 +678,7 @@ function parse_opt() {
     --fs_log_async_log_max_queue_size) FS_LOG_ASYNC_LOG_MAX_QUEUE_SIZE=$2 && shift 2 ;;
     --fs_log_async_log_thread_count) FS_LOG_ASYNC_LOG_THREAD_COUNT=$2 && shift 2 ;;
     --fs_also_log_to_stderr) FS_ALSO_LOG_TO_STDERR=$2 && shift 2 ;;
+    --log_use_utc_time) YR_LOG_USE_UTC_TIME=$2 && shift 2 ;;
     --runtime_log_level) RUNTIME_LOG_LEVEL=$2 && shift 2 ;;
     --runtime_log_path) RUNTIME_LOG_PATH=$2 && shift 2 ;;
     --runtime_log_rolling_max_size) RUNTIME_LOG_ROLLING_MAX_SIZE=$2 && shift 2 ;;
@@ -632,6 +696,10 @@ function parse_opt() {
     --ds_log_rolling_max_files) DS_LOG_ROLLING_MAX_FILES=$2 && shift 2 ;;
     --ds_log_monitor_enable) DS_LOG_MONITOR_ENABLE=$2 && shift 2 ;;
     --etcd_log_path) ETCD_LOG_PATH=$2 && shift 2 ;;
+    --log_expiration_enable) LOG_EXPIRATION_ENABLE=$2 && shift 2 ;;
+    --log_expiration_time_threshold) LOG_EXPIRATION_TIME_THRESHOLD=$2 && shift 2 ;;
+    --log_expiration_cleanup_interval) LOG_EXPIRATION_CLEANUP_INTERVAL=$2 && shift 2 ;;
+    --log_expiration_max_file_count) LOG_EXPIRATION_MAX_FILE_COUNT=$2 && shift 2 ;;
     --fs_health_check_timeout) FS_HEALTH_CHECK_TIMEOUT=$2 && shift 2 ;;
     --fs_health_check_retry_times) FS_HEALTH_CHECK_RETRY_TIMES=$2 && shift 2 ;;
     --fs_health_check_retry_interval) FS_HEALTH_CHECK_RETRY_INTERVAL=$2 && shift 2 ;;
@@ -640,7 +708,12 @@ function parse_opt() {
     --faas_frontend_http_port) FAAS_FRONTEND_HTTP_PORT=$2 && port_policy_table["faas_frontend_http_port"]="FIX" && shift 2 ;;
     --faas_frontend_grpc_port) FAAS_FRONTEND_GRPC_PORT=$2 && port_policy_table["faas_frontend_grpc_port"]="FIX" && shift 2 ;;
     --enable_function_scheduler) ENABLE_FUNCTION_SCHEDULER=$2 && shift 2 ;;
+    --enable_function_token_auth) ENABLE_FUNCTION_TOKEN_AUTH=$2 && shift 2 ;;
     --enable_meta_service) ENABLE_META_SERVICE=$2 && shift 2 ;;
+    --enable_iam_server) ENABLE_IAM_SERVER=$2 && shift 2 ;;
+    --iam_server_port) IAM_SERVER_PORT=$2 && port_policy_table["iam_server_port"]="FIX" && shift 2 ;;
+    --iam_token_expired_time_span) IAM_TOKEN_EXPIRED_TIME_SPAN=$2 && shift 2 ;;
+    --iam_credential_type) IAM_CREDENTIAL_TYPE=$2 && shift 2 ;;
     --meta_servce_port) META_SERVICE_PORT=$2 && port_policy_table["meta_service_port"]="FIX" && shift 2 ;;
     --min_instance_cpu_size) MIN_INSTANCE_CPU_SIZE=$2 && shift 2 ;;
     --min_instance_memory_size) MIN_INSTANCE_MEMORY_SIZE=$2 && shift 2 ;;
@@ -649,6 +722,7 @@ function parse_opt() {
     --function_agent_port) FUNCTION_AGENT_PORT=$2 && port_policy_table["function_agent_port"]="FIX" && shift 2 ;;
     --function_proxy_port) FUNCTION_PROXY_PORT=$2 && port_policy_table["function_proxy_port"]="FIX" && shift 2 ;;
     --function_proxy_grpc_port) FUNCTION_PROXY_GRPC_PORT=$2 && port_policy_table["function_proxy_grpc_port"]="FIX" && shift 2 ;;
+    --function_proxy_exec_grpc_port) FUNCTION_PROXY_EXEC_GRPC_PORT=$2 && port_policy_table["function_proxy_exec_grpc_port"]="FIX" && shift 2 ;;
     --runtime_init_port) RUNTIME_INIT_PORT=$2 && port_policy_table["runtime_init_port"]="FIX" && shift 2 ;;
     --global_scheduler_port) GLOBAL_SCHEDULER_PORT=$2 && port_policy_table["global_scheduler_port"]="FIX" && shift 2 ;;
     --metrics_collector_type) METRICS_COLLECTOR_TYPE=$2 && shift 2 ;;
@@ -676,6 +750,13 @@ function parse_opt() {
     --local_schedule_plugins) LOCAL_SCHEDULE_PLUGINS=$2 && shift 2 ;;
     --domain_schedule_plugins) DOMAIN_SCHEDULE_PLUGINS=$2 && shift 2 ;;
     --enable_print_perf) ENABLE_PRINT_PERF=$2 && shift 2 ;;
+    --enable_traefik_registry) ENABLE_TRAEFIK_REGISTRY=$2 && shift 2 ;;
+    --traefik_domain) TRAEFIK_DOMAIN=$2 && shift 2 ;;
+    --traefik_etcd_prefix) TRAEFIK_ETCD_PREFIX=$2 && shift 2 ;;
+    --traefik_lease_ttl) TRAEFIK_LEASE_TTL=$2 && shift 2 ;;
+    --traefik_http_entrypoint) TRAEFIK_HTTP_ENTRYPOINT=$2 && shift 2 ;;
+    --traefik_enable_tls) TRAEFIK_ENABLE_TLS=$2 && shift 2 ;;
+    --traefik_servers_transport) TRAEFIK_SERVERS_TRANSPORT=$2 && shift 2 ;;
     --enable_meta_store) ENABLE_META_STORE=$2 && shift 2 ;;
     --enable_dashboard) ENABLE_DASHBOARD=$2 && shift 2 ;;
     --enable_collector) ENABLE_COLLECTOR=$2 && shift 2 ;;
@@ -736,6 +817,12 @@ function parse_opt() {
     --block) BLOCK=$2 && shift 2 ;;
     --ssl_base_path) SSL_BASE_PATH=$2 && shift 2 ;;
     --ssl_enable) SSL_ENABLE=$2 && shift 2 ;;
+    --frontend_ssl_enable) FRONTEND_SSL_ENABLE=$2 && shift 2 ;;
+    --frontend_client_auth_type) FRONTEND_CLIENT_AUTH_TYPE=$2 && shift 2 ;;
+    --meta_service_ssl_enable) META_SERVICE_SSL_ENABLE=$2 && shift 2 ;;
+    --meta_service_client_auth_type) META_SERVICE_CLIENT_AUTH_TYPE=$2 && shift 2 ;;
+    --meta_service_address) META_SERVICE_ADDRESS=$2 && shift 2 ;;
+    --iam_ssl_enable) IAM_SSL_ENABLE=$2 && shift 2 ;;
     --ssl_root_file) SSL_ROOT_FILE=$2 && shift 2 ;;
     --ssl_cert_file) SSL_CERT_FILE=$2 && shift 2 ;;
     --ssl_key_file) SSL_KEY_FILE=$2 && shift 2 ;;
@@ -763,6 +850,10 @@ function parse_opt() {
     --enable_preemption) ENABLE_PREEMPTION=$2 && shift 2 ;;
     --kill_process_timeout_seconds) KILL_PROCESS_TIMEOUT_SECONDS=$2 && shift 2 ;;
     --runtime_home_dir) RUNTIME_USER_HOME_DIR=$2 && shift 2 ;;
+    --enable_dposix_uds) ENABLE_DPOSIX_UDS=$2 && shift 2 ;;
+    --dposix_uds_path) DPOSIX_UDS_PATH=$2 && shift 2 ;;
+    --local_ip) LOCAL_IP=$2 && shift 2 ;;
+    --system_tenant_id) SYSTEM_TENANT_ID=$2 && shift 2 ;;
     --) shift && break ;;
     *) log_error "Invalid option: $1" && return 1 ;;
     esac
@@ -778,6 +869,19 @@ function parse_arg_from_env() {
   fi
   if [ "X$YR_ETCD_ADDR_LIST" != "X" ]; then
     ETCD_ADDR_LIST=$YR_ETCD_ADDR_LIST
+  fi
+  if [ "X$LOCAL_IP" == "X" ]; then
+    LOCAL_IP=$IP_ADDRESS
+  fi
+}
+
+function parse_uds_config() {
+  if [ "X${ENABLE_DPOSIX_UDS}" == "Xfalse" ] || [ "X${ENABLE_DPOSIX_UDS}" == "XFALSE" ]; then
+    DPOSIX_UDS_PATH=""
+    return 0
+  fi
+  if [ "X${DPOSIX_UDS_PATH}" == "X" ]; then
+    DPOSIX_UDS_PATH="${INSTALL_DIR_PARENT}/${NODE_ID}/dposix_uds/"
   fi
 }
 
@@ -855,6 +959,7 @@ function check_number_input() {
   check_port_range "function_agent_port" $FUNCTION_AGENT_PORT
   check_port_range "function_proxy_port" $FUNCTION_PROXY_PORT
   check_port_range "function_proxy_grpc_port" $FUNCTION_PROXY_GRPC_PORT
+  check_port_range "function_proxy_exec_grpc_port" $FUNCTION_PROXY_EXEC_GRPC_PORT
   check_port_range "global_scheduler_port" $GLOBAL_SCHEDULER_PORT
   check_port_range "ds_master_port" $DS_MASTER_PORT
   check_port_range "ds_worker_port" $DS_WORKER_PORT
@@ -1280,6 +1385,7 @@ function process_log_config() {
   FS_LOG_CONFIG="${FS_LOG_CONFIG//\{\{logAsyncMaxQueueSize\}\}/$FS_LOG_ASYNC_LOG_MAX_QUEUE_SIZE}"
   FS_LOG_CONFIG="${FS_LOG_CONFIG//\{\{logAsyncThreadCount\}\}/$FS_LOG_ASYNC_LOG_THREAD_COUNT}"
   FS_LOG_CONFIG="${FS_LOG_CONFIG//\{\{logAlsologtostderr\}\}/$FS_ALSO_LOG_TO_STDERR}"
+  FS_LOG_CONFIG="${FS_LOG_CONFIG//\{\{logUseUtcTime\}\}/$YR_LOG_USE_UTC_TIME}"
   FS_LOG_CONFIG="${FS_LOG_CONFIG//\{\{logConfigPath\}\}/$FS_LOG_PATH}"
   log_info "function system log config: ${FS_LOG_CONFIG}"
 
@@ -1451,10 +1557,10 @@ function export_config() {
   export LOG_ROOT DS_LOG_PATH ETCD_LOG_PATH STD_LOG_SUFFIX CPU_RESERVED_FOR_DS_WORKER MAX_INSTANCE_CPU_SIZE MAX_INSTANCE_MEMORY_SIZE
   export DS_LOG_ROLLING_MAX_SIZE DS_LOG_ROLLING_MAX_FILES DS_RPC_THREAD_NUM DS_CLIENT_DEAD_TIMEOUT_S DS_NODE_DEAD_TIMEOUT_S
   export RUNTIME_LOG_PATH RUNTIME_LOG_LEVEL DS_LOG_LEVEL_STR MIN_INSTANCE_CPU_SIZE MIN_INSTANCE_MEMORY_SIZE
-  export ACCESSOR_HTTP_PORT ACCESSOR_GRPC_PORT FUNCTION_AGENT_PORT FUNCTION_PROXY_PORT FUNCTION_PROXY_GRPC_PORT
+  export ACCESSOR_HTTP_PORT ACCESSOR_GRPC_PORT FUNCTION_AGENT_PORT FUNCTION_PROXY_PORT FUNCTION_PROXY_GRPC_PORT FUNCTION_PROXY_EXEC_GRPC_PORT
   export RUNTIME_INIT_PORT DS_WORKER_PORT RUNTIME_CONN_TIMEOUT_S
   export RUNTIME_INIT_CALL_TIMEOUT_SECONDS IS_SCHEDULE_TOLERATE_ABNORMAL STATE_STORAGE_TYPE
-  export MERGE_PROCESS_ENABLE DRIVER_GATEWAY_ENABLE
+  export MERGE_PROCESS_ENABLE FUNCTION_PROXY_MERGE_PROCESS_ENABLE DRIVER_GATEWAY_ENABLE
   export NPU_COLLECTION_MODE GPU_COLLECTION_ENABLE NUMA_COLLECTION_ENABLE
   export GLOBAL_SCHEDULER_PORT METRICS_COLLECTOR_TYPE ETCD_PROXY_ENABLE
   export RUNTIME_METRICS_CONFIG
@@ -1469,6 +1575,7 @@ function export_config() {
   export ETCD_IP ETCD_PORT ETCD_PEER_PORT ETCD_PROXY_NUMS ETCD_PROXY_NUMS ETCD_PROXY_PORT ETCD_NO_FSYNC
   # trace and metrics
   export ENABLE_TRACE TRACE_CONFIG RUNTIME_TRACE_CONFIG ENABLE_METRICS METRICS_CONFIG METRICS_CONFIG_FILE STATUS_COLLECT_ENABLE STATUS_COLLECT_INTERVAL
+  export ENABLE_TRAEFIK_REGISTRY TRAEFIK_DOMAIN TRAEFIK_ETCD_PREFIX TRAEFIK_LEASE_TTL TRAEFIK_HTTP_ENTRYPOINT TRAEFIK_ENABLE_TLS TRAEFIK_SERVERS_TRANSPORT
   export FUNCTION_AGENT_LITEBUS_THREAD FUNCTION_PROXY_LITEBUS_THREAD FUNCTION_MASTER_LITEBUS_THREAD
   export SYSTEM_TIMEOUT FUNCTION_PROXY_UNIQUE_ENABLE
   export ENABLE_META_STORE ENABLE_PERSISTENCE META_STORE_MODE META_STORE_EXCLUDED_KEYS
@@ -1492,15 +1599,25 @@ function export_config() {
   # collector
   export ENABLE_COLLECTOR COLLECTOR_PORT
   # meta_service
-  export ENABLE_META_SERVICE META_SERVICE_PORT
+  export ENABLE_META_SERVICE META_SERVICE_PORT META_SERVICE_ADDRESS FRONTEND_CLIENT_AUTH_TYPE META_SERVICE_CLIENT_AUTH_TYPE
   # faas
-  export ENABLE_FAAS_FRONTEND FAAS_FRONTEND_HTTP_PORT FAAS_FRONTEND_GRPC_PORT ENABLE_FUNCTION_SCHEDULER
+  export ENABLE_FAAS_FRONTEND FAAS_FRONTEND_HTTP_PORT FAAS_FRONTEND_GRPC_PORT ENABLE_FUNCTION_SCHEDULER ENABLE_FUNCTION_TOKEN_AUTH
+  # uds
+  export ENABLE_DPOSIX_UDS DPOSIX_UDS_PATH LOCAL_IP
+  # log expiration
+  export LOG_EXPIRATION_ENABLE LOG_EXPIRATION_CLEANUP_INTERVAL LOG_EXPIRATION_TIME_THRESHOLD LOG_EXPIRATION_MAX_FILE_COUNT
+  # log UTC time configuration for yuanrong runtime
+  export YR_LOG_USE_UTC_TIME
+  # system tenant configuration
+  export SYSTEM_TENANT_ID
 }
 
 function main() {
   parse_opt "$@"
   [ $? -ne 0 ] && help_msg && return 1
   parse_arg_from_env
+  [ $? -ne 0 ] && help_msg && return 1
+  parse_uds_config
   [ $? -ne 0 ] && help_msg && return 1
   check_input
   [ $? -ne 0 ] && help_msg && return 1

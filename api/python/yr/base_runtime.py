@@ -74,7 +74,7 @@ class ConsistencyType(Enum):
     CAUSAL = 1
 
 
-@dataclass
+@dataclass(init=True, repr=False, eq=False, order=False, unsafe_hash=False)
 class SetParam:
     """Set parameters."""
     #: Whether duplicate key writing is supported.
@@ -95,7 +95,7 @@ class SetParam:
     cache_type: CacheType = CacheType.MEMORY
 
 
-@dataclass
+@dataclass(init=True, repr=False, eq=False, order=False, unsafe_hash=False)
 class MSetParam:
     """Represents the parameter configuration class for the mset operation."""
     #: Whether duplicate key writing is supported.
@@ -117,7 +117,7 @@ class MSetParam:
     cache_type: CacheType = CacheType.MEMORY
 
 
-@dataclass
+@dataclass(init=True, repr=False, eq=False, order=False, unsafe_hash=False)
 class CreateParam:
     """Create param."""
 
@@ -153,7 +153,7 @@ class AlarmSeverity(Enum):
     CRITICAL = 4
 
 
-@dataclass
+@dataclass(init=True, repr=False, eq=False, order=False, unsafe_hash=False)
 class GetParam():
     """Get the parameter configuration class."""
     #: Offset, default is ``0``.
@@ -162,14 +162,14 @@ class GetParam():
     size: int = 0
 
 
-@dataclass
+@dataclass(init=True, repr=False, eq=False, order=False, unsafe_hash=False)
 class GetParams():
     """Interface class for obtaining parameters."""
     #: A group of GetParam, the quantity needs to be greater than 0.
     get_params: List[GetParam] = field(default_factory=list)
 
 
-@dataclass
+@dataclass(init=True, repr=False, eq=False, order=False, unsafe_hash=False)
 class AlarmInfo:
     """Alarm info."""
     #: The name of the alarm. The default value is an empty string.
@@ -369,6 +369,24 @@ class BaseRuntime(metaclass=ABCMeta):
         terminate group
         :param group_name: group name which need to terminate
         :return: None
+        """
+
+    @abstractmethod
+    def snapshot_instance(self, instance_id: str, ttl: int = -1, leave_running: bool = False) -> str:
+        """
+        Create instance snapshot with signal 18
+        :param instance_id: instance id to snapshot
+        :param ttl: time-to-live for the snapshot in seconds
+        :param leave_running: whether to keep instance running after snapshot
+        :return: checkpointID
+        """
+
+    @abstractmethod
+    def snapstart_instance(self, checkpoint_id: str) -> str:
+        """
+        Start instance from snapshot with signal 19
+        :param checkpoint_id: checkpoint id to restore from
+        :return: new instance id
         """
 
     @abstractmethod

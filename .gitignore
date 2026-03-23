@@ -5,6 +5,9 @@ bazel-*
 .idea
 .clwb
 .ijwb
+.claude
+.specify
+specs/
 external
 api/cpp/example/3rd
 genhtml
@@ -42,14 +45,24 @@ test/st/functions/**/*.xml
 # build
 cmake-build-debug
 api/python/build/
-build/
-go/output/
+/build/
+go/build/_output
 go/output/bin/client/dist/
 go/pkg/dashboard/client/dist/
 go/pkg/dashboard/client/node_modules/
 example/custom_runtime/openyuanrong
 example/custom_runtime/worker/yuanrong
+outputapi/python/build/
+api/python/dist/
+api/python/*.egg-info/
+go/output/
+go/pkg/dashboard/client/dist/
+go/pkg/dashboard/client/node_modules/
+/metrics/
 output/
+scripts/package/.build/
+thirdparty/runtime_deps/
+api/python/yr/inner//
 scripts/package/.build/
 metrics
 

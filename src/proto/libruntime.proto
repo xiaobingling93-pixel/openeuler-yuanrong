@@ -44,7 +44,7 @@ enum ApiType {
     Function = 0;
     Faas = 1;
     Posix = 2;
-    Serve = 3; 
+    Serve = 3;
 }
 
 enum Signal {
@@ -69,6 +69,7 @@ enum Signal {
     UpdateSchedulerHash = 72;
     ErasePendingThread = 73;
     GetInstance = 74;
+    UpdateEventInfo = 75;
 }
 
 enum SubscriptionType {
@@ -96,7 +97,8 @@ message FunctionMeta {
     bool needOrder = 15;
     string tensorTransportTarget = 16;
     bool enableTensorTransport = 17;
-    bytes payload = 18; // Recovered instance buffer data
+    bytes code = 18;
+    bytes payload = 19; // Recovered instance buffer data
 }
 
 message FunctionID {

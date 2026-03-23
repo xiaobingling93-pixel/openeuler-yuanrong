@@ -105,7 +105,7 @@ public:
         STDERR_AND_THROW_EXCEPTION(ERR_INNER_SYSTEM_ERROR, RUNTIME,
                                    "CreateRGroupAsync method not implemented when inCluster is false");
     }
-    ErrorInfo Init(std::shared_ptr<HttpClient> httpClient, std::int32_t connectTimeout);
+    ErrorInfo Init(std::shared_ptr<HttpClient> httpClient, std::int32_t connectTimeout, const std::string &authToken = "");
     void Init(std::shared_ptr<HttpClient> httpClient);
     ErrorInfo Init(const std::string &ip, int port) override;
     ErrorInfo Init(const std::string &addr, int port, std::int32_t connectTimeout);
@@ -340,12 +340,15 @@ private:
     std::string funcId_;
     std::string jobId_;
     AsyncDecreRef asyncDecreRef_;
+    mutable std::mutex refCountMu_;
     RefCountMap refCountMap_;
     std::shared_ptr<TimerWorker> timerWorker_;
     std::shared_ptr<YR::utility::Timer> timer_;
     int lostLeaseTimes_ = 0;
     std::int32_t connectTimeout_ = DS_CONNECT_TIMEOUT;
     std::shared_ptr<Security> security_;
+    std::string authToken_;
+    std::string tenantId_;
 };
 
 class ClientBuffer : public NativeBuffer {

@@ -132,7 +132,7 @@ func createInstanceForKernel(request createInstanceRequest) (instance *types.Ins
 	delete(invokeOpts.CustomResources, resourcesMemory)
 	instanceID, createErr = globalSdkClient.CreateInstance(funcMeta, args, invokeOpts)
 	if createErr != nil {
-		logger.Errorf("failed to create instance, error info is %#v", createErr)
+		logger.Errorf("failed to create instance, error info is %s", createErr)
 		createErr = generateSnErrorFromKernelError(createErr)
 		return
 	}
@@ -149,8 +149,8 @@ func deleteInstanceForKernel(funcSpec *types.FunctionSpecification, faasManagerI
 	var err error
 	err = killInstanceAndIgnoreNotFoundError(instance.InstanceID)
 	if err != nil {
-		log.GetLogger().Errorf("failed to delete instance %s for function %s first, start retry",
-			instance.InstanceID, funcSpec.FuncKey)
+		log.GetLogger().Warnf("failed to delete instance %s for function %s first, err: %s, start retry",
+			instance.InstanceID, funcSpec.FuncKey, err.Error())
 		go deleteInstanceForKernelRetry(instance.InstanceID)
 		return err
 	}
@@ -275,6 +275,17 @@ func prepareSchedulingOptions(funcSpec *types.FunctionSpecification,
 
 func createInvokeOptions(funcSpec *types.FunctionSpecification, schedulingOptions *types.SchedulingOptions,
 	createOpt map[string]string, poolLabel string) api.InvokeOptions {
+	if !isEmptyRootfsSpec(funcSpec.RootfsSpecMeta) {
+		rootfsData, err := json.Marshal(funcSpec.RootfsSpecMeta)
+		if err != nil {
+			log.GetLogger().Warnf("failed to marshal rootfs spec for function %s: %s", funcSpec.FuncKey, err.Error())
+		} else {
+			if createOpt == nil {
+				createOpt = make(map[string]string)
+			}
+			createOpt["rootfs"] = string(rootfsData)
+		}
+	}
 	codeEntrys := []string{funcSpec.ExtendedMetaData.Initializer.Handler, funcSpec.FuncMetaData.Handler}
 	if funcSpec.ExtendedMetaData.PreStop.Handler != "" {
 		codeEntrys = append(codeEntrys, funcSpec.ExtendedMetaData.PreStop.Handler)
@@ -293,6 +304,18 @@ func createInvokeOptions(funcSpec *types.FunctionSpecification, schedulingOption
 		ScheduleTimeoutMs:  constant.KernelScheduleTimeout * time.Second.Milliseconds(),
 	}
 	return invokeOpts
+}
+
+func isEmptyRootfsSpec(rootfs commonTypes.RootfsSpecMeta) bool {
+	if rootfs.Runtime != "" || rootfs.Type != "" || rootfs.ImageURL != "" || rootfs.Path != "" ||
+		rootfs.MountPoint != "" || rootfs.ReadOnly {
+		return false
+	}
+	if rootfs.StorageInfo.Endpoint != "" || rootfs.StorageInfo.Bucket != "" || rootfs.StorageInfo.Object != "" ||
+		rootfs.StorageInfo.AccessKey != "" || rootfs.StorageInfo.SecretKey != "" {
+		return false
+	}
+	return true
 }
 
 func generateScheduleAffinity(scheduleAffinity []api.Affinity, label string) []api.Affinity {
@@ -758,6 +781,22 @@ func setCreateOptionForRASP(funcSpec *types.FunctionSpecification, createOpt map
 	add, createErr := initContainerAdd(funcSpec)
 	if createErr != nil {
 		log.GetLogger().Errorf(fmt.Sprintf("create init container error, %s", createErr.Error()))
+	}
+	createOpt[constant.DelegateInitContainers] = string(add)
+	return nil
+}
+
+func setCreateOptionForOtel(funcSpec *types.FunctionSpecification, createOpt map[string]string) error {
+	if !funcSpec.ExtendedMetaData.UserOtelConfig.Enable {
+		return nil
+	}
+	if createOpt == nil {
+		return errors.New("createOpt is nil")
+	}
+	add, createErr := initContainerAdd(funcSpec)
+	if createErr != nil {
+		log.GetLogger().Errorf(fmt.Sprintf("create init container error, %s", createErr.Error()))
+		return createErr
 	}
 	createOpt[constant.DelegateInitContainers] = string(add)
 	return nil

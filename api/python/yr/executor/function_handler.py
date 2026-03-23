@@ -16,6 +16,7 @@
 
 """function handler"""
 
+import logging
 import os
 import traceback
 import inspect
@@ -25,7 +26,6 @@ import uuid
 from yr.libruntime_pb2 import InvokeType
 from yr.npu_object import NpuObject
 import yr
-from yr import log
 from yr.code_manager import CodeManager
 from yr.common.utils import err_to_str
 from yr.err_type import ErrorCode, ErrorInfo, ModuleCode
@@ -46,17 +46,21 @@ except ImportError as import_err:
     _import_error = import_err
 
 USER_SHUTDOWN_FUNC_NAME = "__yr_shutdown__"
+USER_BEFORE_SNAPSHOT_FUNC_NAME = "__yr_before_snapshot__"
+USER_AFTER_SNAPSTART_FUNC_NAME = "__yr_after_snapstart__"
+
+_logger = logging.getLogger(__name__)
 
 
 def _store_tensor_to_ds(results, instance_function_name):
     def dev_mset_to_ds(tensor: torch.Tensor, instance_function_name):
         key = str(uuid.uuid4())
         ds_client = get_tensor_client()
-        log.get_logger().info(
+        _logger.info(
             f"start dev mset, tensor key is {key}, function name: {instance_function_name}")
         failed_keys = ds_client.dev_mset([key], [tensor])
         if failed_keys:
-            log.get_logger().error(
+            _logger.error(
                 f"dev mset failed, failed keys is {failed_keys}, function name is {instance_function_name}")
             raise RuntimeError(
                 f"dev_mset failed, failed keys: {failed_keys}, function name: {instance_function_name}")
@@ -87,10 +91,10 @@ def _get_tensor_from_ds(*args, **kwargs):
                 raise RuntimeError(f"import err: {_import_error}")
             ds_client = get_tensor_client()
             out_tensor = torch.zeros(size=arg.size, dtype=arg.dtype, device=f'npu:{current_device()}')
-            log.get_logger().info(f"start get tensor from ds, arg id is {arg.id}, current device is {current_device()}")
+            _logger.info(f"start get tensor from ds, arg id is {arg.id}, current device is {current_device()}")
             failed_keys = ds_client.dev_mget([arg.id], [out_tensor])
             if failed_keys:
-                log.get_logger().info(f"dev_mget failed, arg id is {arg.id}, failed key is {failed_keys}")
+                _logger.info(f"dev_mget failed, arg id is {arg.id}, failed key is {failed_keys}")
                 raise RuntimeError(f"dev_mget failed, failed keys: {failed_keys}")
             return out_tensor
         elif isinstance(arg, list):
@@ -135,10 +139,10 @@ class FunctionHandler(HandlerIntf):
                 result = self.__delete_tensors(args)
             else:
                 msg = f"invalid invoke type {invoke_type}"
-                log.get_logger().warning(msg)
+                _logger.warning(msg)
                 return [], ErrorInfo(ErrorCode.ERR_EXTENSION_META_ERROR, ModuleCode.RUNTIME, msg)
         except Exception as err:
-            log.get_logger().warning("failed to execute user function, err: %s", err_to_str(err))
+            _logger.warning("failed to execute user function, err: %s", err_to_str(err))
             if isinstance(err, YRInvokeError):
                 result = [YRInvokeError(err.cause, traceback.format_exc())]
             else:
@@ -150,7 +154,7 @@ class FunctionHandler(HandlerIntf):
             result_new = self.__check_return_list(result, return_num)
         except (TypeError, ValueError) as e:
             result_new = [YRInvokeError(e, traceback.format_exc())]
-            log.get_logger().error("Errors found during checking return values list, error: %s", e)
+            _logger.error("Errors found during checking return values list, error: %s", e)
             return result_new, ErrorInfo(ErrorCode.ERR_USER_FUNCTION_EXCEPTION, ModuleCode.RUNTIME,
                                          f"failed to execute user function, err: {repr(e)}")
 
@@ -158,7 +162,7 @@ class FunctionHandler(HandlerIntf):
 
     def shutdown(self, grace_period_second: int) -> ErrorInfo:
         """shutdown"""
-        log.get_logger().debug("Start to call user shutdown function __yr_shutdown__")
+        _logger.debug("Start to call user shutdown function __yr_shutdown__")
         instance = InstanceManager().instance()
         if instance is None:
             return ErrorInfo(
@@ -174,13 +178,108 @@ class FunctionHandler(HandlerIntf):
             return ErrorInfo()
         try:
             shutdown_func(grace_period_second)
-            log.get_logger().info("Succeeded to call user shutdown function __yr_shutdown__")
+            _logger.info("Succeeded to call user shutdown function __yr_shutdown__")
+        except Exception as e:
+            _logger.exception(e)
+            return ErrorInfo(ErrorCode.ERR_INNER_SYSTEM_ERROR, ModuleCode.RUNTIME, err_to_str(e))
+        return ErrorInfo()
+
+    def __before_snapshot(self, instance) -> ErrorInfo:
+        """
+        Call user-defined __yr_before_snapshot__ hook before taking snapshot.
+
+        Args:
+            instance: The user instance object.
+
+        Returns:
+            ErrorInfo: Error information if hook execution failed.
+        """
+        if instance is None:
+            return ErrorInfo(
+                ErrorCode.ERR_INNER_SYSTEM_ERROR,
+                ModuleCode.RUNTIME,
+                f"Failed to invoke instance function [{USER_BEFORE_SNAPSHOT_FUNC_NAME}], instance has not been initialized",
+            )
+
+        # Check if user defined the hook method
+        if not hasattr(instance, USER_BEFORE_SNAPSHOT_FUNC_NAME):
+            log.get_logger().debug(f"User hook {USER_BEFORE_SNAPSHOT_FUNC_NAME} not defined, skipping")
+            return ErrorInfo()
+
+        snapshot_hook = getattr(instance, USER_BEFORE_SNAPSHOT_FUNC_NAME)
+        if not callable(snapshot_hook):
+            log.get_logger().debug(f"User hook {USER_BEFORE_SNAPSHOT_FUNC_NAME} is not callable, skipping")
+            return ErrorInfo()
+
+        log.get_logger().debug(f"Start to call user snapshot hook {USER_BEFORE_SNAPSHOT_FUNC_NAME}")
+        try:
+            snapshot_hook()
+            log.get_logger().info(f"Succeeded to call user snapshot hook {USER_BEFORE_SNAPSHOT_FUNC_NAME}")
         except Exception as e:
             log.get_logger().exception(e)
             return ErrorInfo(ErrorCode.ERR_INNER_SYSTEM_ERROR, ModuleCode.RUNTIME, err_to_str(e))
         return ErrorInfo()
 
+    def __after_snapstarted(self, instance) -> ErrorInfo:
+        """
+        Call user-defined __yr_after_snapstart__ hook after restoring from snapshot.
+
+        Args:
+            instance: The user instance object.
+
+        Returns:
+            ErrorInfo: Error information if hook execution failed.
+        """
+        if instance is None:
+            return ErrorInfo(
+                ErrorCode.ERR_INNER_SYSTEM_ERROR,
+                ModuleCode.RUNTIME,
+                f"Failed to invoke instance function [{USER_AFTER_SNAPSTART_FUNC_NAME}], instance has not been initialized",
+            )
+
+        # Check if user defined the hook method
+        if not hasattr(instance, USER_AFTER_SNAPSTART_FUNC_NAME):
+            log.get_logger().debug(f"User hook {USER_AFTER_SNAPSTART_FUNC_NAME} not defined, skipping")
+            return ErrorInfo()
+
+        snapstart_hook = getattr(instance, USER_AFTER_SNAPSTART_FUNC_NAME)
+        if not callable(snapstart_hook):
+            log.get_logger().debug(f"User hook {USER_AFTER_SNAPSTART_FUNC_NAME} is not callable, skipping")
+            return ErrorInfo()
+
+        log.get_logger().debug(f"Start to call user snapstart hook {USER_AFTER_SNAPSTART_FUNC_NAME}")
+        try:
+            snapstart_hook()
+            log.get_logger().info(f"Succeeded to call user snapstart hook {USER_AFTER_SNAPSTART_FUNC_NAME}")
+        except Exception as e:
+            log.get_logger().exception(e)
+            return ErrorInfo(ErrorCode.ERR_INNER_SYSTEM_ERROR, ModuleCode.RUNTIME, err_to_str(e))
+        return ErrorInfo()
+
+    def before_snapshot(self) -> ErrorInfo:
+        """
+        Public method to trigger snapshot hook, called by libruntime before snapshot.
+
+        Returns:
+            ErrorInfo: Error information if hook execution failed.
+        """
+        log.get_logger().debug("Trigger before_snapshot hook")
+        instance = InstanceManager().instance()
+        return self.__before_snapshot(instance)
+
+    def after_snapstart(self) -> ErrorInfo:
+        """
+        Public method to trigger snapstart hook, called by libruntime after restore.
+
+        Returns:
+            ErrorInfo: Error information if hook execution failed.
+        """
+        log.get_logger().debug("Trigger after_snapstart hook")
+        instance = InstanceManager().instance()
+        return self.__after_snapstarted(instance)
+
     def __create_instance(self, func_meta, args) -> None:
+        _logger.info("%s" % func_meta)
         class_code = CodeManager().load_code(func_meta, True)
         if class_code is None:
             raise RuntimeError(f"Failed to load code from data system, code id: [{func_meta.codeID}]")

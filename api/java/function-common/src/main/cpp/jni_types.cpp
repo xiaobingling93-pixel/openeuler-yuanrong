@@ -694,6 +694,7 @@ void JNILibRuntimeConfig::Init(JNIEnv *env)
     jmIsEnableMetrics_ = GetJMethod(env, clz_, "isEnableMetrics", "()Z");
     jmIsEnableMTLS_ = GetJMethod(env, clz_, "isEnableMTLS", "()Z");
     jmIsEnableDsEncrypt_ = GetJMethod(env, clz_, "isEnableDsEncrypt", "()Z");
+    jmIsEnableFrontendTLS_ = GetJMethod(env ,clz_, "isEnableFrontendTLS", "()Z");
     jmGetCertificateFilePath_ = GetJMethod(env, clz_, "getCertificateFilePath", "()Ljava/lang/String;");
     jmGetPrivateKeyPath_ = GetJMethod(env, clz_, "getPrivateKeyPath", "()Ljava/lang/String;");
     jmGetDsPublicKeyContextPath_ = GetJMethod(env, clz_, "getDsPublicKeyContextPath", "()Ljava/lang/String;");
@@ -785,6 +786,7 @@ YR::Libruntime::LibruntimeConfig JNILibRuntimeConfig::FromJava(JNIEnv *env, cons
     libConfig.tenantId = JNIString::FromJava(env, static_cast<jstring>(env->CallObjectMethod(meta, jGetTenantId_)));
     libConfig.enableMTLS = static_cast<bool>(env->CallBooleanMethod(meta, jmIsEnableMTLS_));
     libConfig.encryptEnable = static_cast<bool>(env->CallBooleanMethod(meta, jmIsEnableDsEncrypt_));
+    libConfig.enableTLS = static_cast<bool>(env->CallBooleanMethod(meta, jmIsEnableFrontendTLS_));
     libConfig.dsPublicKeyPath =
         JNIString::FromJava(env, static_cast<jstring>(env->CallObjectMethod(meta, jmGetDsPublicKeyContextPath_)));
     libConfig.runtimePublicKeyPath =
@@ -1518,6 +1520,7 @@ jobject JNIErrorCode::FromCc(JNIEnv *env, const YR::Libruntime::ErrorCode &error
         {YR::Libruntime::ErrorCode::ERR_EXTENSION_META_ERROR, 1008},
         {YR::Libruntime::ErrorCode::ERR_INSTANCE_SUB_HEALTH, 1009},
         {YR::Libruntime::ErrorCode::ERR_GROUP_SCHEDULE_FAILED, 1010},
+        {YR::Libruntime::ErrorCode::ERR_FUNCTION_META_NOT_FOUND, 1015},
         {YR::Libruntime::ErrorCode::ERR_USER_CODE_LOAD, 2001},
         {YR::Libruntime::ErrorCode::ERR_USER_FUNCTION_EXCEPTION, 2002},
         {YR::Libruntime::ErrorCode::ERR_REQUEST_BETWEEN_RUNTIME_BUS, 3001},

@@ -15,6 +15,9 @@
  */
 
 #include "src/libruntime/invoke_spec.h"
+
+#include <google/protobuf/util/json_util.h>
+
 namespace YR {
 namespace Libruntime {
 const std::string LOW_RELIABILITY_TYPE = "low";
@@ -54,6 +57,9 @@ InvokeSpec::InvokeSpec(const std::string &jobId, const FunctionMeta &functionMet
       requestInvoke(std::make_shared<InvokeMessageSpec>())
 {
     schedulerInstanceIdMtx_ = std::make_shared<absl::Mutex>();
+    createTimestamp =
+        std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch())
+            .count();
 }
 
 void InvokeSpec::ConsumeRetryTime()
@@ -373,6 +379,7 @@ std::string InvokeSpec::BuildCreateMetaData(const LibruntimeConfig &config, std:
     funcMeta->set_language(this->functionMeta.languageType);
     funcMeta->set_modulename(this->functionMeta.moduleName);
     funcMeta->set_signature(this->functionMeta.signature);
+    funcMeta->set_code(this->functionMeta.code.data(), this->functionMeta.code.size());
     if (!this->functionMeta.name.empty()) {
         funcMeta->set_name(this->functionMeta.name);
     }
@@ -380,7 +387,11 @@ std::string InvokeSpec::BuildCreateMetaData(const LibruntimeConfig &config, std:
         funcMeta->set_ns(this->functionMeta.ns);
     }
     if (!designatedInstanceID.empty()) {
-        funcMetaStr = funcMeta->SerializeAsString();
+        google::protobuf::util::JsonPrintOptions options;
+        auto status = google::protobuf::util::MessageToJsonString(*funcMeta, &funcMetaStr, options);
+        if (!status.ok()) {
+            YRLOG_WARN("Failed to serialize function meta to json string, error message: {}", status.message());
+        }
     }
     auto metaConfig = meta.mutable_config();
     config.BuildMetaConfig(*metaConfig);
@@ -442,6 +453,7 @@ std::string InvokeSpec::BuildInvokeMetaData(const LibruntimeConfig &config)
     funcMeta->set_isasync(this->functionMeta.isAsync);
     funcMeta->set_tensortransporttarget(this->functionMeta.tensorTransportTarget);
     funcMeta->set_enabletensortransport(this->functionMeta.enableTensorTransport);
+    funcMeta->set_code(this->functionMeta.code.data(), this->functionMeta.code.size());
     auto invocationMeta = meta.mutable_invocationmeta();
     if (config.runtimeId == "driver") {
         invocationMeta->set_invokerruntimeid(config.runtimeId + "_" + config.jobId);

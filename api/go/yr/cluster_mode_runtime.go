@@ -261,3 +261,7 @@ func (r *ClusterModeRuntime) IsHealth() bool {
 func (r *ClusterModeRuntime) IsDsHealth() bool {
 	return true
 }
+
+func (r *ClusterModeRuntime) GetActiveMasterAddr() string {
+	return clibruntime.GetActiveMasterAddr()
+}

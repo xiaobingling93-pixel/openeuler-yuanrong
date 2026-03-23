@@ -164,13 +164,19 @@ void SpdLogger::RegisterLogger(const LogParam &logParam, const std::string &logg
     }
 
     if (sinks.empty()) {
-        auto rotatingSink = std::make_shared<yr_spdlog::sinks::rotating_file_sink_mt>(
-            logFile, logParam.maxSize * SIZE_MEGA_BYTES, logParam.maxFiles);
-        auto dupFilter = std::make_shared<yr_spdlog::sinks::dup_filter_sink_mt>(std::chrono::seconds(DUP_FILTER_TIME));
-        sinks = {rotatingSink, dupFilter};
-        if (logParam.alsoLog2Stderr) {
+        if (logParam.onlyStdout) {
+            // Only output to stdout, no file sink
             auto consoleSink = std::make_shared<yr_spdlog::sinks::stdout_color_sink_mt>();
-            (void)sinks.emplace_back(consoleSink);
+            sinks = {consoleSink};
+        } else {
+            auto rotatingSink = std::make_shared<yr_spdlog::sinks::rotating_file_sink_mt>(
+                logFile, logParam.maxSize * SIZE_MEGA_BYTES, logParam.maxFiles);
+            auto dupFilter = std::make_shared<yr_spdlog::sinks::dup_filter_sink_mt>(std::chrono::seconds(DUP_FILTER_TIME));
+            sinks = {rotatingSink, dupFilter};
+            if (logParam.alsoLog2Stderr) {
+                auto consoleSink = std::make_shared<yr_spdlog::sinks::stdout_color_sink_mt>();
+                (void)sinks.emplace_back(consoleSink);
+            }
         }
     }
     logger = std::make_shared<yr_spdlog::async_logger>(loggerName, sinks.begin(), sinks.end(),
@@ -185,7 +191,8 @@ void SpdLogger::RegisterLogger(const LogParam &logParam, const std::string &logg
     if (logMergeType_.load() == LOG_MERGE_TYPE) {
         pattern = "%L%m%d %H:%M:%S.%f %t %s:%#] %P,%!]%v";
     }
-    logger->set_pattern(pattern, yr_spdlog::pattern_time_type::utc);  // log with international UTC time
+    auto timeType = logParam.useUtcTime ? yr_spdlog::pattern_time_type::utc : yr_spdlog::pattern_time_type::local;
+    logger->set_pattern(pattern, timeType);
 
     yr_spdlog::register_logger(logger);
 }

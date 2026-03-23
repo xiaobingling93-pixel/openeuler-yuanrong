@@ -176,7 +176,7 @@ group_of_java_tests(
         "org.yuanrong.TestConfigManager",
         "org.yuanrong.TestGroup",
         "org.yuanrong.TestYRGetInstance"
-    ], 
+    ],
     srcs = glob([
         "yr-api-sdk/src/test/java/**/*.java",
     ]),
@@ -274,7 +274,8 @@ group_of_java_tests(
         "org.yuanrong.executor.TestFunctionHandler",
         "org.yuanrong.executor.TestReturnType",
         "org.yuanrong.runtime.server.TestRuntimeLogger",
-        "org.yuanrong.TestEntrypoint"
+        "org.yuanrong.TestEntrypoint",
+        "org.yuanrong.utils.TestRuntimeUtils"
     ],
     srcs = glob([
         "yr-runtime/src/test/java/**/*.java",

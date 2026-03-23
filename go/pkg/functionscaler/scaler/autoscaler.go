@@ -76,13 +76,15 @@ type AutoScaler struct {
 
 // NewAutoScaler will create a AutoScaler
 func NewAutoScaler(funcKeyWithRes string, metricsCollector metrics.Collector, checkReqNumFunc CheckReqNumFunc,
-	scaleUpHandler ScaleUpHandler, scaleDownHandler ScaleDownHandler,
+	scaleUpHandler ScaleUpHandler, scaleDownHandler ScaleDownHandler, autoScaleConfig types.AutoScaleConfig,
 ) InstanceScaler {
-	scaleUpWindow := time.Duration(config.GlobalConfig.AutoScaleConfig.SLAQuota) * time.Millisecond
+	log.GetLogger().Debugf("autoScaleConfig: %v", autoScaleConfig)
+
+	scaleUpWindow := time.Duration(autoScaleConfig.SLAQuota) * time.Millisecond
 	if scaleUpWindow < minSLATime {
 		scaleUpWindow = minSLATime
 	}
-	scaleDownWindow := time.Duration(config.GlobalConfig.AutoScaleConfig.ScaleDownTime) * time.Millisecond
+	scaleDownWindow := time.Duration(autoScaleConfig.ScaleDownTime) * time.Millisecond
 	if scaleDownWindow < scaleUpWindow {
 		scaleDownWindow = scaleUpWindow
 	}

@@ -99,6 +99,11 @@ void ClusterAccessInfo::ParseFromMasterInfo()
         agentIP = agentIPIt->second;
     }
 
+    std::string hostIP;
+    if (auto hostIPIt = kvMap.find("host_ip"); hostIPIt != kvMap.end()) {
+        hostIP = hostIPIt->second;
+    }
+
     std::string etcdIP;
     if (auto etcdIPIt = kvMap.find("etcd_ip"); etcdIPIt != kvMap.end()) {
         etcdIP = etcdIPIt->second;
@@ -120,7 +125,7 @@ void ClusterAccessInfo::ParseFromMasterInfo()
     }
 
     serverAddr = agentIP + ":" + busPort;
-    dsAddr = agentIP + ":" + dsPort;
+    dsAddr = hostIP + ":" + dsPort;
     inCluster = true;
 
     std::string globalSchedPort;

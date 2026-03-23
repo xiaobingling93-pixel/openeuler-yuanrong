@@ -83,6 +83,7 @@ using KillRequest = ::core_service::KillRequest;
 using KillResponse = ::core_service::KillResponse;
 using SubscriptionPayload = ::core_service::SubscriptionPayload;
 using NotificationPayload = ::core_service::NotificationPayload;
+using EventPayload = ::core_service::EventPayload;
 using InstanceTermination = ::core_service::InstanceTermination;
 using FunctionMasterObserve = ::core_service::FunctionMasterObserve;
 using KillCallBack = std::function<void(const KillResponse &, const ErrorInfo &err)>;
@@ -117,6 +118,12 @@ using RecoverResponse = ::runtime_service::RecoverResponse;
 
 using ShutdownRequest = ::runtime_service::ShutdownRequest;
 using ShutdownResponse = ::runtime_service::ShutdownResponse;
+
+using PrepareSnapRequest = ::runtime_service::PrepareSnapRequest;
+using PrepareSnapResponse = ::runtime_service::PrepareSnapResponse;
+
+using SnapStartedRequest = ::runtime_service::SnapStartedRequest;
+using SnapStartedResponse = ::runtime_service::SnapStartedResponse;
 
 using SignalRequest = ::runtime_service::SignalRequest;
 using SignalResponse = ::runtime_service::SignalResponse;
@@ -237,6 +244,11 @@ using RecoverHandler = std::function<RecoverResponse(const RecoverRequest &)>;
 using RecoverCallBack = std::function<void(const RecoverResponse &)>;
 using ShutdownHandler = std::function<ShutdownResponse(const ShutdownRequest &)>;
 using ShutdownCallBack = std::function<void(const ShutdownResponse &)>;
+using PrepareSnapHandler = std::function<PrepareSnapResponse(const PrepareSnapRequest &)>;
+using PrepareSnapCallBack = std::function<void(const PrepareSnapResponse &)>;
+using SnapStartedHandler = std::function<SnapStartedResponse(const SnapStartedRequest &)>;
+using SnapStartedCallBack = std::function<void(const SnapStartedResponse &)>;
+using RefreshEnvCallback = std::function<void(void)>;
 using SignalHandler = std::function<SignalResponse(const SignalRequest &)>;
 using SignalCallBack = std::function<void(const SignalResponse &)>;
 using HeartbeatHandler = std::function<HeartbeatResponse(const HeartbeatRequest &)>;
@@ -259,6 +271,9 @@ struct FSIntfHandlers {
     CheckpointHandler checkpoint = nullptr;
     RecoverHandler recover = nullptr;
     ShutdownHandler shutdown = nullptr;
+    PrepareSnapHandler prepareSnap = nullptr;
+    SnapStartedHandler snapStarted = nullptr;
+    RefreshEnvCallback refreshEnv = nullptr;
     SignalHandler signal = nullptr;
     HeartbeatHandler heartbeat = nullptr;
     EventHandler event = nullptr;
@@ -322,6 +337,7 @@ public:
                                   CallResultCallBack callback);
     virtual HeartbeatResponse HandleHeartbeat(const HeartbeatRequest &hb);
     virtual void RemoveInsRtIntf(const std::string &instanceId) {}
+    virtual ErrorInfo ReconnectProxyClient(const std::string &fsIp, int fsPort) { return ErrorInfo(); }
     void HandleCallRequest(const std::shared_ptr<CallMessageSpec> &req, CallCallBack callback);
     void ProcessCallRequest(const std::shared_ptr<CallMessageSpec> &req, CallCallBack callback);
     void HandleInterruptRequest(const google::protobuf::Map<std::string, std::string> &createOptions,
@@ -335,6 +351,8 @@ public:
     void HandleCheckpointRequest(const CheckpointRequest &req, CheckpointCallBack callback);
     void HandleRecoverRequest(const RecoverRequest &req, RecoverCallBack callback);
     void HandleShutdownRequest(const ShutdownRequest &req, ShutdownCallBack callback);
+    void HandlePrepareSnapRequest(const PrepareSnapRequest &req, PrepareSnapCallBack callback);
+    void HandleSnapStartedRequest(const SnapStartedRequest &req, SnapStartedCallBack callback);
     void HandleSignalRequest(const SignalRequest &req, SignalCallBack callback);
     void HandleHeartbeatRequest(const HeartbeatRequest &req, HeartbeatCallBack callback);
     void HandleEventRequest(const std::shared_ptr<EventMessageSpec> &req);

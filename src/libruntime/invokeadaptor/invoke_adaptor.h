@@ -117,6 +117,9 @@ public:
 
     virtual ErrorInfo Kill(const std::string &instanceId, const std::string &payload, int signal);
 
+    virtual std::pair<ErrorInfo, KillResponse> KillWithResponse(const std::string &instanceId,
+                                                                 const std::string &payload, int signal);
+
     virtual void KillAsync(const std::string &instanceId, const std::string &payload, int signal);
     virtual void KillAsyncCB(const std::string &instanceId, const std::string &payload, int signal,
                              std::function<void(const ErrorInfo &err)> cb, int timeoutSec = -1);
@@ -161,6 +164,8 @@ public:
     void CallHandler(const std::shared_ptr<CallMessageSpec> &req);
     CheckpointResponse CheckpointHandler(const CheckpointRequest &req);
     RecoverResponse RecoverHandler(const RecoverRequest &req);
+    PrepareSnapResponse PrepareSnapHandler(const PrepareSnapRequest &req);
+    SnapStartedResponse SnapStartedHandler(const SnapStartedRequest &req);
 
     void CreateResourceGroup(std::shared_ptr<ResourceGroupCreateSpec> spec);
     virtual std::pair<YR::Libruntime::FunctionMeta, ErrorInfo> GetInstance(const std::string &name,
@@ -186,6 +191,7 @@ public:
     virtual std::pair<ErrorInfo, QueryNamedInsResponse> QueryNamedInstances();
     ErrorInfo StreamWriteEvent(const std::string &streamMessage, const std::string &requestId,
                                const std::string &instanceId);
+    std::string GetActiveMasterAddr();
     virtual std::pair<std::string, ErrorInfo> LoadCurrentSession(const std::string &sessionId);
     virtual ErrorInfo UpdateCurrentSession(const std::string &sessionId, const std::string &sessionData);
     virtual bool IsSessionInterrupted(const std::string &sessionId);

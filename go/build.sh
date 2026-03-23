@@ -56,6 +56,23 @@ go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@latest
 # resolve missing go.sum entry
 go env -w "GOFLAGS"="-mod=mod"
 
+# download datasystem
+if [ ! -d "${YR_DATASYSTEM_DIR}"/output/sdk/go/stream ]; then
+    if ls ${YR_DATASYSTEM_DIR}/output/yr-datasystem-*.tar.gz 1>/dev/null 2>&1; then
+        tar --no-same-owner -zxf ${YR_DATASYSTEM_DIR}/output/yr-datasystem-*.tar.gz --strip-components=1 -C "${YR_DATASYSTEM_DIR}/output"
+    else
+        echo "start to download datasystem"
+        DS_OUT_DIR="${YR_DATASYSTEM_DIR}/output"
+        rm -rf "${DS_OUT_DIR}"
+        mkdir -p "${DS_OUT_DIR}"
+        pushd "${DS_OUT_DIR}"
+        wget -O datasystem.tar.gz ${DATA_SYSTEM_CACHE}
+        tar --no-same-owner -zxf datasystem.tar.gz --strip-components=1
+        popd
+    fi
+fi
+export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:"${YR_DATASYSTEM_DIR}/output/sdk/go/lib"
+
 echo "generating fs proto pb objects"
 mkdir -p "${OUTPUT_DIR}"
 protoc --proto_path=${POSIX_DIR} --go_out=${OUTPUT_DIR} --go-grpc_out=${OUTPUT_DIR} ${POSIX_DIR}/*.proto

@@ -963,6 +963,26 @@ void CGetEvent(char *objectId, void *userData)
         userData);
 }
 
+void CGetEvent(char *objectId, void *userData)
+{
+    auto [lrt, err] = getLibRuntime();
+    if (!err.OK()) {
+        return;  // 以后把报错抛出去
+    }
+    lrt->GetEvent(
+        objectId,
+        [](std::shared_ptr<DataObject> data, const ErrorInfo &err, void *userData) {
+            auto cErr = ErrorInfoToCError(err);
+            CBuffer cBuf = {0};
+            if (err.OK()) {
+                cErr = ErrorInfoToCError(ToCBuffer(data->data, &cBuf));
+            }
+            auto cObjectId = const_cast<char *>(data->id.c_str());
+            GoGetEventCallback(cObjectId, cBuf, &cErr, userData);
+        },
+        userData);
+}
+
 CErrorInfo CKill(char *instanceId, int sigNo, CBuffer cData)
 {
     std::shared_ptr<NativeBuffer> data;
@@ -1795,6 +1815,15 @@ int CIsDsHealth()
         return 1;
     }
     return 0;
+}
+
+char* CGetActiveMasterAddr()
+{
+    auto [lrt, err] = getLibRuntime();
+    if (!err.OK()) {
+        return "";
+    }
+    return CString(lrt->GetActiveMasterAddr());
 }
 
 #ifdef __cplusplus

@@ -459,6 +459,13 @@ function start_control_plane() {
   if ! restart_control_plane_component "function_master" $CONTROL_PLANE_RETRY_TIMES; then
     return 98
   fi
+  # iam_server
+  if [ "X${ENABLE_IAM_SERVER}" = "Xtrue" ] || [ "X${ENABLE_IAM_SERVER}" = "XTRUE" ]; then
+    log_info "Deploying iam_server..."
+    if ! restart_control_plane_component "iam_server" $CONTROL_PLANE_RETRY_TIMES; then
+      return 98
+    fi
+  fi
   return 0
 }
 
@@ -469,7 +476,7 @@ function dump_master_info() {
     master_pid_string="${master_pid_string}${key}:${pid_table["${key}"]},"
   done
   log_info "all pid for control plane:${master_pid_string}"
-  MASTER_INFO_STRING="local_ip:${IP_ADDRESS},master_ip:${IP_ADDRESS},"
+  MASTER_INFO_STRING="local_ip:${LOCAL_IP},host_ip:${IP_ADDRESS},master_ip:${IP_ADDRESS},"
   if [ "X${ETCD_MODE}" != "Xoutter" ]; then
     MASTER_INFO_STRING="${MASTER_INFO_STRING}etcd_ip:${ETCD_IP},"
   fi
@@ -482,19 +489,24 @@ function dump_master_info() {
 function dump_agent_info() {
   # right now the master ip is not really the master ip but the agent ip
   if [ "$MASTER_INFO_STRING"X = ""X ]; then
-    MASTER_INFO_STRING="local_ip:${IP_ADDRESS},"
+    MASTER_INFO_STRING="local_ip:${LOCAL_IP},host_ip:${IP_ADDRESS},"
   fi
 }
 
 function start_function_proxy() {
-  update_data_plane_port "function_proxy_port function_proxy_grpc_port"
+  update_data_plane_port "function_proxy_port function_proxy_grpc_port function_proxy_exec_grpc_port"
   FUNCTION_PROXY_PORT=${data_port_table["function_proxy_port"]}
   FUNCTION_PROXY_GRPC_PORT=${data_port_table["function_proxy_grpc_port"]}
+  FUNCTION_PROXY_EXEC_GRPC_PORT=${data_port_table["function_proxy_exec_grpc_port"]}
   install_function_system "function_proxy"
   check_and_set_component_checklist "function_proxy" $FUNCTION_PROXY_PID
 }
 
 function start_function_agent() {
+  if [ "X${FUNCTION_PROXY_MERGE_PROCESS_ENABLE^^}" == "XTRUE" ]; then
+    log_info "function_proxy_merge_process_enable is true, function_agent will be started by function_proxy, skip starting function_agent separately"
+    return 0
+  fi
   update_data_plane_port "function_agent_port runtime_init_port"
   FUNCTION_AGENT_PORT=${data_port_table["function_agent_port"]}
   RUNTIME_INIT_PORT=${data_port_table["runtime_init_port"]}
@@ -506,6 +518,10 @@ function start_faas_frontend() {
   if [ "X${ENABLE_FAAS_FRONTEND}" != "Xtrue" ] && [ "X${ENABLE_FAAS_FRONTEND}" != "XTRUE" ]; then
     return 0
   fi
+  if [ -z "${META_SERVICE_ADDRESS}" ]; then
+    META_SERVICE_ADDRESS="${IP_ADDRESS}:${META_SERVICE_PORT}"
+  fi
+  export META_SERVICE_ADDRESS
   update_data_plane_port "faas_frontend_http_port faas_frontend_grpc_port"
   FAAS_FRONTEND_HTTP_PORT=${data_port_table["faas_frontend_http_port"]}
   FAAS_FRONTEND_GRPC_PORT=${data_port_table["faas_frontend_grpc_port"]}
@@ -561,6 +577,22 @@ function start_meta_service() {
   if [ ${ret_code} -eq 0 ]; then
     check_and_set_component_checklist "meta_service" $META_SERVICE_PID
   fi
+  return ${ret_code}
+}
+
+function start_iam_server() {
+  if [ "X${ENABLE_IAM_SERVER}" != "Xtrue" ] && [ "X${ENABLE_IAM_SERVER}" != "XTRUE" ]; then
+    return 0
+  fi
+  update_control_plane_port "iam_server_port"
+  IAM_SERVER_PORT=${control_port_table["iam_server_port"]}
+  install_function_system "iam_server"
+  ret_code=$?
+  if [ ${ret_code} -eq 0 ]; then
+    check_and_set_component_checklist "iam_server" $IAM_SERVER_PID
+  fi
+  IAM_SERVER_ADDRESS="${IP_ADDRESS}:${IAM_SERVER_PORT}"
+  export IAM_SERVER_ADDRESS
   return ${ret_code}
 }
 
@@ -683,7 +715,7 @@ function restart_component() {
        restart_agent_runtime_accessor
      fi
     ;;
-  function_master|ds_master|collector|faas_frontend|dashboard|function_scheduler)
+  function_master|ds_master|collector|faas_frontend|dashboard|function_scheduler|meta_service|iam_server)
     restart_module "$1"
     ;;
   etcd)
@@ -703,6 +735,8 @@ function restart_component() {
     terminate_process ${pid_table["dashboard"]}
     terminate_process ${pid_table["faas_frontend"]}
     terminate_process ${pid_table["function_scheduler"]}
+    terminate_process ${pid_table["meta_service"]}
+    terminate_process ${pid_table["iam_server"]}
     start_control_plane
     ;;
   *)
@@ -916,7 +950,11 @@ function main() {
   if [ "x${DEPLOY_FUNCTION_PROXY}" = "xtrue" ]; then
       health_check "function_proxy" ${pid_table["function_proxy"]}
   fi
-  start_function_agent
+  if [ ${CPU4COMP} -le 100 ]; then
+    log_warning "no cpu available for function agent, skip starting it"
+  else
+    start_function_agent
+  fi
   start_faas_frontend
   start_function_scheduler
   start_dashboard

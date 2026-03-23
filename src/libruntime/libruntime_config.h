@@ -231,6 +231,7 @@ struct LibruntimeConfig {
     uint32_t httpIocThreadsNum = 200;
     int httpIdleTime = HTTP_IDLE_TIME;
     std::string serverName = "";
+    bool skipServerVerify = true;  // Whether to skip server certificate verification
     bool inCluster = true;
     std::string ns = "";
     bool isLowReliabilityTask = false;
@@ -269,7 +270,10 @@ struct LibruntimeConfig {
     uint32_t maxConnSize = 10000;
     std::string nodeId;
     std::string nodeIp;
+    std::string envFile = "";  // Path to environment variable file (.env format: KEY=VALUE, one per line)
     bool enableEvent = false;
+    std::string authToken = "";
+
 private:
     ErrorInfo ValidateKeyParams();
 };

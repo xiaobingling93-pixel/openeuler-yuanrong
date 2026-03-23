@@ -43,6 +43,15 @@ from yr.decorator.instance_proxy import InstanceCreator, InstanceProxy
 from yr.common.utils import CrossLanguageInfo
 from yr.resource_group import ResourceGroup
 
+# Gradual migration: StatelessFunction is the new preferred name
+# FunctionProxy is kept for backward compatibility
+StatelessFunction = FunctionProxy
+
+# Gradual migration: StatefulInstance and StatefulInstanceCreator are the new preferred names
+# InstanceProxy and InstanceCreator are kept for backward compatibility  
+StatefulInstance = InstanceProxy
+StatefulInstanceCreator = InstanceCreator
+
 from yr.serialization import Serialization
 from yr.ds_tensor_client_manager import get_tensor_client
 
@@ -53,7 +62,17 @@ _DEFAULT_ALLOW_PARTIAL = False
 _DEFAULT_ALLOW_FORCE = True
 _DEFAULT_ALLOW_RECURSIVE = False
 _DEFAULT_SAVE_LOAD_STATE_TIMEOUT = 30
-_DEFAULT_FUNC_ID = "sn:cn:yrk:12345678901234561234567890123456:function:0-defaultservice-py:$latest"
+
+
+def get_python_tag():
+    """获取 Python 版本标签"""
+    import sys
+
+    ver = sys.version_info
+    return f"py{ver.major}{ver.minor}"
+
+
+_DEFAULT_FUNC_ID = f"sn:cn:yrk:default:function:0-defaultservice-{get_python_tag()}:$latest"
 
 
 def is_initialized():
@@ -96,13 +115,30 @@ def _get_from_env(conf):
         conf.ds_address = os.environ.get("YR_DS_ADDRESS", "")
     if conf.working_dir == "":
         conf.working_dir = os.environ.get("YR_WORKING_DIR", "")
+    if conf.in_cluster is None:
+        in_cluster_env = os.environ.get("YR_IN_CLUSTER", "true").lower()
+        conf.in_cluster = True if in_cluster_env == "true" else False
     app_mode_env_var = os.environ.get("YR_APP_MODE", "false").lower()
     if app_mode_env_var == "true":
         conf.is_driver = False
     if conf.rt_server_address == "":
         conf.rt_server_address = os.environ.get("POSIX_LISTEN_ADDR", "")
+    if conf.enable_mtls is None:
+        enable_mtls_env = os.environ.get("YR_ENABLE_MTLS", "false").lower()
+        conf.enable_mtls = True if enable_mtls_env == "true" else False
+    if conf.enable_tls is None:
+        enable_tls_env = os.environ.get("YR_ENABLE_TLS", "false").lower()
+        conf.enable_tls = True if enable_tls_env == "true" else False
+    if conf.private_key_path == "":
+        conf.private_key_path = os.environ.get("YR_PRIVATE_KEY_FILE", "")
+    if conf.certificate_file_path == "":
+        conf.certificate_file_path = os.environ.get("YR_CERT_FILE", "")
+    if conf.verify_file_path == "":
+        conf.verify_file_path = os.environ.get("YR_VERIFY_FILE", "")
+    if conf.server_name == "":
+        conf.server_name = os.environ.get("YR_SERVER_NAME", "")
+    conf.log_dir = os.environ.get("YR_LOG_PATH", "./")
     return conf
-
 
 def _auto_get_cluster_access_info(conf):
     conf = _get_from_env(conf)
@@ -169,7 +205,7 @@ def init(conf: Config = None) -> ClientInfo:
 
     msg = f"Succeeded to init YR, jobID is {ConfigManager().job_id}"
     if not conf.is_driver:
-        log.get_logger().info(msg)
+        _logger.info(msg)
     else:
         _logger.info(msg)
 
@@ -518,52 +554,78 @@ def cancel(obj_refs: Union[ObjectRef, List[ObjectRef]], allow_force: bool = _DEF
         [ref.id for ref in obj_refs], allow_force, allow_recursive)
 
 
-def invoke(*args, **kwargs) -> function_proxy.FunctionProxy:
+def invoke(*args, **kwargs) -> "StatelessFunction":
     """
-    Used to decorate functions that need to be remotely invoked on the openYuanRong system.
+    Decorator for creating stateless remote functions on the openYuanrong system.
 
-    This decorator is used to mark functions that need to be remotely invoked
-    on the Yuanrong system and returns a proxy object of the function.
+    This decorator transforms regular Python functions into stateless remote functions
+    that can be executed on the Yuanrong distributed system. When a function is decorated
+    with @yr.invoke, it becomes a StatelessFunction object that provides remote execution
+    capabilities via the .invoke() method.
 
     Note:
-        Due to the performance limitations of the HTTP client,
-        only 100,000 concurrent connections are currently supported per client.
+        - This is a function decorator, use it with @yr.invoke syntax.
+        - Due to the performance limitations of the HTTP client,
+          only 100,000 concurrent connections are currently supported per client.
+        - The decorated function becomes a StatelessFunction and cannot be called directly.
 
     Args:
-        func (FunctionType): The function that needs to be remotely invoked.
-        invoke_options (InvokeOptions): Invocation options, see `InvokeOptions`.
-        return_nums (int): The number of return values of the function,
+        func (FunctionType): The function that needs to be remotely invoked (when used as @yr.invoke).
+        invoke_options (InvokeOptions, optional): Invocation options for setting resources and behavior.
+        return_nums (int, optional): The number of return values of the function,
             restrictions: greater than 0, this parameter is not recommended to be set too large.
+        initializer (callable, optional): Initialization function to run before the main function.
 
     Returns:
-        Returns the proxy object of the decorated function. Data type is FunctionProxy.
+        Returns a StatelessFunction object that wraps the decorated function for remote execution.
+        Data type is StatelessFunction.
 
     Raises:
-        RuntimeError: If `invoke` cannot decorate objects other than `FunctionType`, this exception will be thrown.
+        RuntimeError: If the decorator cannot be applied to objects other than functions.
 
     Examples:
-        Simple invocation example:
+        Basic decorator usage:
             >>> import yr
             >>> yr.init()
+            >>> 
             >>> @yr.invoke
             ... def add(a, b):
             ...     return a + b
-            >>> ret = add.invoke(1, 2)
-            >>> print(yr.get(ret))
+            >>> 
+            >>> # Function is now a StatelessFunction, call with .invoke()
+            >>> result_ref = add.invoke(1, 2)
+            >>> result = yr.get(result_ref)
+            >>> print(result)  # Output: 3
             >>> yr.finalize()
 
-
-        Function invocation example:
+        Decorator with parameters:
             >>> import yr
             >>> yr.init()
+            >>> 
+            >>> opts = yr.InvokeOptions(cpu=1000, memory=512)
+            >>> @yr.invoke(invoke_options=opts, return_nums=2)
+            ... def divmod_func(a, b):
+            ...     return divmod(a, b)
+            >>> 
+            >>> quotient_ref, remainder_ref = divmod_func.invoke(10, 3)
+            >>> print(yr.get(quotient_ref), yr.get(remainder_ref))  # Output: 3 1
+            >>> yr.finalize()
+
+        Chaining remote function calls:
+            >>> import yr
+            >>> yr.init()
+            >>> 
             >>> @yr.invoke
             ... def func1(a):
             ...     return a + " func1"
+            >>> 
             >>> @yr.invoke
             ... def func2(a):
             ...     return yr.get(func1.invoke(a)) + " func2"
-            >>> ret = func2.invoke("hello")
-            >>> print(yr.get(ret))
+            >>> 
+            >>> result_ref = func2.invoke("hello")
+            >>> result = yr.get(result_ref)
+            >>> print(result)  # Output: hello func1 func2
             >>> yr.finalize()
     """
     if len(args) == 1 and len(kwargs) == 0 and callable(args[0]):
@@ -574,7 +636,7 @@ def invoke(*args, **kwargs) -> function_proxy.FunctionProxy:
     return function_proxy.make_decorator(invoke_options, return_nums, initializer)
 
 
-def instance(*args, **kwargs) -> instance_proxy.InstanceCreator:
+def instance(*args, **kwargs) -> "StatefulInstanceCreator":
     """
     Used to decorate classes that need to be remotely invoked on the openYuanRong system.
 
@@ -584,7 +646,7 @@ def instance(*args, **kwargs) -> instance_proxy.InstanceCreator:
 
     Returns:
         The creator of the decorated class.
-        Data type is InstanceCreator.
+        Data type is StatefulInstanceCreator.
 
     Raises:
         RuntimeError: If the object decorated by `instance` is not a class.
@@ -910,7 +972,7 @@ def kv_write(key: str, value: bytes, existence: ExistenceOpt = ExistenceOpt.NONE
 @check_initialized
 def kv_write_with_param(key: str, value: bytes, set_param: SetParam) -> None:
     """
-    Provide a storage interface that supports custom parameter configuration, 
+    Provide a storage interface that supports custom parameter configuration,
     enabling binary data to be written to the data system in a more flexible manner.
 
     Args:
@@ -946,7 +1008,7 @@ def kv_write_with_param(key: str, value: bytes, set_param: SetParam) -> None:
 @check_initialized
 def kv_m_write_tx(keys: List[str], values: List[bytes], m_set_param: MSetParam = MSetParam()) -> None:
     """
-    Provide a Redis-like set storage interface that supports persisting 
+    Provide a Redis-like set storage interface that supports persisting
     a collection of binary data into the data system.
 
     Args:
@@ -1273,7 +1335,7 @@ def load_state(timeout_sec: int = _DEFAULT_SAVE_LOAD_STATE_TIMEOUT) -> None:
     _logger.info("Succeeded to load instance state")
 
 
-def get_instance(name: str, namespace: str = "", timeout: int = 60) -> instance_proxy.InstanceProxy:
+def get_instance(name: str, namespace: str = "", timeout: int = 60) -> "StatefulInstance":
     """
     Get an instance handle based on the name and namespace of the named instance.
     The interface call will block until the instance handle is obtained or a timeout occurs.
@@ -1284,7 +1346,7 @@ def get_instance(name: str, namespace: str = "", timeout: int = 60) -> instance_
         timeout (int): The timeout in seconds.
 
     Returns:
-        A Python named instance handle. Data type is InstanceProxy.
+        A Python named instance handle. Data type is StatefulInstance.
 
     Raises:
         TypeError: If the parameter types are incorrect.
@@ -1406,15 +1468,15 @@ def create_resource_group(bundles: List[Dict[str, float]], name: Optional[str] =
             cannot be 'primary' or an empty string. This parameter is optional, with a default value of ``None``,
             meaning a rgroup-{uuid} type string will be randomly generated as the `resource group name`.
         strategy (OptionsOptional[str], optional): The strategy to create the resource group, defalut strategy is ``PACK``
-            
+
             - ``'None'``: No strategy.
 
             - ``'PACK'``: Pack multiple bundles into the same node as much as possible.
-            
+
             - ``'SPREAD`'': Distribute multiple bundles across different nodes as much as possible.
-            
+
             - ''`STRICT_PACK`'': All bundles must be placed on the same node, otherwise creation fails.
-           
+
             - ''`STRICT_SPREAD`'': All bundles must be placed on different nodes, otherwise creation fails.
 
     Returns:
@@ -1484,7 +1546,7 @@ class cpp_instance_class:
             class_name (str): cpp class name.
             factory_name (str): Name of the static factory function of the cpp class.
             function_urn (str): Function URN, Defaults to
-                sn:cn:yrk:12345678901234561234567890123456:function:0-defaultservice-cpp:$latest.
+                sn:cn:yrk:default:function:0-defaultservice-cpp:$latest.
 
         Examples:
             .. code-block:: cpp
@@ -1519,7 +1581,7 @@ class cpp_instance_class:
                 >>> import yr
                 >>> yr.init()
                 >>> cpp_function_urn = (
-                ...     "sn:cn:yrk:12345678901234561234567890123456:"
+                ...     "sn:cn:yrk:default:"
                 ...     "function:0-yr-defaultservice-cpp:$latest"
                 ... )
                 >>> counter_class = yr.cpp_instance_class("Counter", "Counter::FactoryCreate", cpp_function_urn)
@@ -1534,7 +1596,7 @@ class cpp_instance_class:
         self.__factory_name__ = factory_name
         self.__function_urn__ = function_urn
 
-    def invoke(self, *args, **kwargs) -> InstanceProxy:
+    def invoke(self, *args, **kwargs) -> "StatefulInstance":
         """
         Create an instance of a cpp class.
 
@@ -1582,7 +1644,7 @@ class cpp_instance_class:
         return utils.get_function_from_urn(self.__function_urn__)
 
 
-def cpp_function(function_name: str, function_urn: str) -> FunctionProxy:
+def cpp_function(function_name: str, function_urn: str) -> "StatelessFunction":
     """
     A proxy for constructing cpp functions and remotely calling cpp functions.
 
@@ -1592,7 +1654,7 @@ def cpp_function(function_name: str, function_urn: str) -> FunctionProxy:
 
     Returns:
         Return a proxy object for the remote C++ function.
-        Data type is FunctionProxy.
+        Data type is StatelessFunction.
 
     Examples:
         .. code-block:: cpp
@@ -1611,7 +1673,7 @@ def cpp_function(function_name: str, function_urn: str) -> FunctionProxy:
             >>> import yr
             >>> yr.init()
             >>> cpp_function_urn = (
-            ...     "sn:cn:yrk:12345678901234561234567890123456:"
+            ...     "sn:cn:yrk:default:"
             ...     "function:0-yr-defaultservice-cpp:$latest"
             ... )
             >>> square_func = yr.cpp_function("Square", cpp_function_urn)
@@ -1623,7 +1685,7 @@ def cpp_function(function_name: str, function_urn: str) -> FunctionProxy:
     return function_proxy.make_cross_language_function_proxy(function_name, function_urn, LanguageType.Cpp)
 
 
-def cpp_instance_class_new(class_name: str, factory_name: str, function_urn: str) -> InstanceCreator:
+def cpp_instance_class_new(class_name: str, factory_name: str, function_urn: str) -> "StatefulInstanceCreator":
     """
     cpp instance class
     """
@@ -1633,7 +1695,7 @@ def cpp_instance_class_new(class_name: str, factory_name: str, function_urn: str
                           function_name=factory_name))
 
 
-def java_function(class_name: str, function_name: str, function_urn: str) -> FunctionProxy:
+def java_function(class_name: str, function_name: str, function_urn: str) -> "StatelessFunction":
     """
     A proxy used to construct java functions and remotely call java functions.
 
@@ -1644,7 +1706,7 @@ def java_function(class_name: str, function_name: str, function_urn: str) -> Fun
 
     Returns:
         The corresponding function proxy.
-        Data type is FunctionProxy.
+        Data type is StatelessFunction.
 
     Examples:
         .. code:: java
@@ -1663,7 +1725,7 @@ def java_function(class_name: str, function_name: str, function_urn: str) -> Fun
             >>> import yr
             >>> yr.init()
             >>> java_function_urn = (
-            ...     "sn:cn:yrk:12345678901234561234567890123456:"
+            ...     "sn:cn:yrk:default:"
             ...     "function:0-yr-defaultservice-java:$latest"
             ... )
             >>> java_add = yr.java_function("org.yuanrong.demo.PlusOne", "PlusOne", java_function_urn)
@@ -1676,17 +1738,18 @@ def java_function(class_name: str, function_name: str, function_urn: str) -> Fun
                                                  target_language=LanguageType.Java, class_name=class_name))
 
 
-def java_instance_class(class_name: str, function_urn: str) -> InstanceCreator:
+def java_instance_class(class_name: str, function_urn: str) -> "StatefulInstanceCreator":
     """
-    A proxy used to construct Java classes and invoke them remotely. 
+    A proxy used to construct Java classes and invoke them remotely.
 
     Args:
         class_name (str): The name of java.
         function_urn (str, optional): The urn of java,
-            default is sn:cn:yrk:12345678901234561234567890123456:function:0-defaultservice-java:$latest.
+            default is sn:cn:yrk:default:function:0-defaultservice-java:$latest.
 
     Returns:
         The corresponding instance creator.
+        Data type is StatefulInstanceCreator.
 
 
     Examples:
@@ -1719,7 +1782,7 @@ def java_instance_class(class_name: str, function_urn: str) -> InstanceCreator:
             >>> import yr
             >>> yr.init()
             >>> java_function_urn = (
-            ...     "sn:cn:yrk:12345678901234561234567890123456:"
+            ...     "sn:cn:yrk:default:"
             ...     "function:0-yr-defaultservice-java:$latest"
             ... )
             >>>
@@ -1740,14 +1803,14 @@ def java_instance_class(class_name: str, function_urn: str) -> InstanceCreator:
                           function_name=""))
 
 
-def go_function(function_name: str, function_urn: str) -> FunctionProxy:
+def go_function(function_name: str, function_urn: str) -> "StatelessFunction":
     """
     Make proxy for go function
     """
     return function_proxy.make_cross_language_function_proxy(function_name, function_urn, LanguageType.Go)
 
 
-def go_instance_class(function_name: str, function_urn: str) -> InstanceCreator:
+def go_instance_class(function_name: str, function_urn: str) -> "StatefulInstanceCreator":
     """
     go instance class
     """
@@ -1778,3 +1841,15 @@ def list_named_instances(all_namespaces: bool = False):
         return [{"name": part.split("-")[1], "namespace": part.split("-")[0]} for part in all_actors]
     ns = get_namespace()
     return [part.split("-")[1] for part in all_actors if part.split("-")[0] == ns]
+
+
+@check_initialized
+def kill_instance(instance_id):
+    """
+    Kill instance by instance id.
+
+    Args:
+        instance_id: The id of the instance to be killed.
+    """
+
+    runtime_holder.global_runtime.get_runtime().terminate_instance_sync(instance_id)

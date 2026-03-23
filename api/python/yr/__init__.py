@@ -74,7 +74,7 @@ from yr.apis import (  # noqa: E402
     query_global_producers_num, query_global_consumers_num, save_state, load_state,
     cpp_function, java_function, go_function, cpp_instance_class, java_instance_class,
     go_instance_class, resources, create_resource_group, remove_resource_group, get_node_ip_address,
-    list_named_instances
+    list_named_instances, kill_instance
 )
 
 from yr.fcc import (  # noqa: E402
@@ -88,6 +88,7 @@ from yr.base_runtime import (  # noqa: E402
 from yr.config import (  # noqa: E402
     Config, InvokeOptions, UserTLSConfig, FunctionGroupOptions, SchedulingAffinityType,
     FunctionGroupContext, ServerInfo, DeviceInfo, ResourceGroupOptions, GroupOptions,
+    PortForwarding,
 )
 
 from yr.group import Group
@@ -102,10 +103,12 @@ from yr.decorator.instance_proxy import (  # noqa: E402
     InstanceCreator, InstanceProxy, MethodProxy, FunctionGroupHandler, FunctionGroupMethodProxy)
 from yr.debug_server.rpdb import set_trace
 
+from yr import sandbox  # noqa: E402
+
 __all__ = [
     "init", "finalize", "Config", "UserTLSConfig",
     "put", "get",
-    "wait", "cancel", "invoke", "instance", "method", "InvokeOptions", "exit",
+    "wait", "cancel", "invoke", "instance", "method", "InvokeOptions", "PortForwarding", "exit",
     "ProducerConfig", "SubscriptionConfig", "Element",
     "create_stream_producer", "create_stream_consumer", "delete_stream",
     "Context", "Function", "GetParam", "GetParams",
@@ -120,6 +123,6 @@ __all__ = [
     "get_function_group_context", "create_resource_group", "remove_resource_group", "ResourceGroup",
     "FunctionProxy", "InstanceCreator", "InstanceProxy", "MethodProxy", "FunctionGroupHandler",
     "FunctionGroupMethodProxy", "get_node_ip_address", "list_named_instances", "Group",  "GroupOptions",
-    "DebugServer", "set_trace",
+    "DebugServer", "set_trace", "sandbox", "kill_instance",
     "ManagedSessionObj", "SessionService",
 ]

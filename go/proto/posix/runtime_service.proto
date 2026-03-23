@@ -110,3 +110,19 @@ message SignalResponse {
   string           message = 2;
   bytes            payload = 3;
 }
+
+// called before sandbox checkpoint
+message PrepareSnapRequest {}
+
+message PrepareSnapResponse {
+  common.ErrorCode code    = 1;
+  string           message = 2;
+}
+
+// called after sandbox restored
+message SnapStartedRequest {}
+
+message SnapStartedResponse {
+  common.ErrorCode code    = 1;
+  string           message = 2;
+}

@@ -17,13 +17,13 @@
 """code manager"""
 
 import importlib.util
+import logging
 import os
 import re
 import sys
 import threading
 from typing import Callable, List
 
-from yr import log
 from yr.common import constants, utils
 from yr.common.singleton import Singleton
 from yr.err_type import ErrorCode, ErrorInfo, ModuleCode
@@ -34,6 +34,7 @@ _DEFAULT_ADMIN_FUNC_PATH = "/adminfunc/"
 _MAX_FAAS_ENTRY_NUMS = 3
 _MIN_FAAS_ENTRY_NUMS = 2
 
+_logger = logging.getLogger(__name__)
 
 def _are_faas_entries(code_paths: List[str]) -> bool:
     if len(code_paths) > _MAX_FAAS_ENTRY_NUMS or len(code_paths) < _MIN_FAAS_ENTRY_NUMS:
@@ -63,6 +64,7 @@ class CodeManager:
         self.custom_handler = os.environ.get(constants.ENV_KEY_ENV_DELEGATE_DOWNLOAD)
         self.deploy_dir = os.environ.get(constants.ENV_KEY_FUNCTION_LIBRARY_PATH)
         self.load_code_from_datasystem_func: Callable = None
+        self.load_code_from_bytes: Callable = None
 
     def clear(self):
         """clear"""
@@ -76,6 +78,12 @@ class CodeManager:
         """
         self.load_code_from_datasystem_func = function
 
+    def register_load_code_from_bytes_func(self, function: Callable):
+        """
+        register load code from bytes
+        """
+        self.load_code_from_bytes = function
+        
     def register(self, function_key: str, function_obj: Callable):
         """
         register function code to code manager
@@ -89,7 +97,7 @@ class CodeManager:
         """
         with self.__lock:
             if function_key not in self.code_map:
-                log.get_logger().info("Code has not been registered in cache, code key: %s", function_key)
+                _logger.info("Code has not been registered in cache, code key: %s", function_key)
                 return
             code = self.code_map.get(function_key)
 
@@ -97,10 +105,10 @@ class CodeManager:
             # Although the 'register' method has raised an error if code is None,
             # the 'register' method and the 'load' method are not in the same thread,
             # the 'load' method will be executed even though the 'register' raise error.
-            log.get_logger().error("Failed to load code from local cache, code is None. Code key: %s", function_key)
+            _logger.error("Failed to load code from local cache, code is None. Code key: %s", function_key)
             return
 
-        log.get_logger().debug("Succeeded to load code. Code key: %s", function_key)
+        _logger.debug("Succeeded to load code. Code key: %s", function_key)
         return code
 
     def get_code_path(self, code_key):
@@ -114,12 +122,16 @@ class CodeManager:
         """
         load user code
         """
+        if len(func_meta.code) != 0:
+            code = self.load_code_from_bytes(func_meta.code)
+            if code is not None:
+                return code
         if len(func_meta.codeID) != 0:
             return self.load_code_from_datasystem(func_meta.codeID)
-        log.get_logger().debug(f'there is no code id in meta, try to load function from local {func_meta}')
+        _logger.debug(f'there is no code id in meta, try to load function from local {func_meta}')
         code_name = func_meta.className if is_class else func_meta.functionName
         code = self.load_code_from_local(self.deploy_dir, func_meta.moduleName, code_name)
-        log.get_logger().debug(f'finished load function from local {self.deploy_dir}, module name '
+        _logger.debug(f'finished load function from local {self.deploy_dir}, module name '
                                f'{func_meta.moduleName}, code name {code_name}')
         return code
 
@@ -129,7 +141,7 @@ class CodeManager:
         """
         if language != LanguageType.Python:
             # add cross language
-            log.get_logger().error("Intermodulation of functions in different languages is not supported.")
+            _logger.error("Intermodulation of functions in different languages is not supported.")
 
         code = self.load(code_id)
         if code is not None:
@@ -140,15 +152,15 @@ class CodeManager:
                 f"Failed to load code from data system, code ID: [{code_id}]."
                 "Function for getting code from data system has not been not registered."
             )
-            log.get_logger().error(msg)
+            _logger.error(msg)
             raise RuntimeError(msg)
         code = self.load_code_from_datasystem_func(code_id)
         if code is None:
             msg = f"Failed to import function from datasystem by {code_id}"
-            log.get_logger().error(msg)
+            _logger.error(msg)
             raise ImportError(msg)
 
-        log.get_logger().debug("Succeeded to load code from datasystem. Code key: %s", code_id)
+        _logger.debug("Succeeded to load code from datasystem. Code key: %s", code_id)
         self.register(code_id, code)
         return code
 
@@ -158,7 +170,12 @@ class CodeManager:
         throw error if module not exists
         return None if module exists but entry not exists
         """
-        log.get_logger().debug("get python code [%s] from local file [%s/%s.py]",
+        # For SDK built-in modules (starting with 'yr.'), use direct import
+        # instead of file path loading to support cross-version compatibility
+        if module_name.startswith("yr."):
+            code_dir = None
+
+        _logger.debug("get python code [%s] from local file [%s/%s.py]",
                                entry_name, code_dir, module_name)
         code_key = module_name + "%%" + entry_name if code_key == "" else code_key
         code = self.load(code_key)
@@ -167,12 +184,21 @@ class CodeManager:
 
         module = self.__load_module(code_dir, module_name)
         code = getattr(module, entry_name, None)
+
+        # Handle YRInstance proxy objects - extract the original user class
+        # When a class is decorated with @yr.instance, it gets wrapped in a proxy
+        # For skip_serialize mode, we need the original unwrapped class
+        if code is not None and hasattr(code, "_InstanceCreator__user_class__"):
+            code = code._InstanceCreator__user_class__
+        elif code is not None and hasattr(code, "__user_class__"):
+            code = code.__user_class__
+
         if code is None:
             msg = f"Failed to import function {entry_name} from {module_name}"
-            log.get_logger().error(msg)
+            _logger.error(msg)
             raise ImportError(msg)
         self.register(code_key, code)
-        log.get_logger().debug("Succeeded to load code from file %s/%s.py. code_key: %s, entry_name: %s",
+        _logger.debug("Succeeded to load code from file %s/%s.py. code_key: %s, entry_name: %s",
                                code_dir, module_name, code_key, entry_name)
         return code
 
@@ -205,7 +231,7 @@ class CodeManager:
         load module and the entry code, throw RuntimeError if failed.
         """
         user_hook_length = 2
-        log.get_logger().debug("Faas load module and entry [%s] from [%s]", user_entry, self.custom_handler)
+        _logger.debug("Faas load module and entry [%s] from [%s]", user_entry, self.custom_handler)
         user_hook_splits = user_entry.rsplit(".", maxsplit=1) if isinstance(user_entry, str) else None
         if len(user_hook_splits) != user_hook_length:
             if code_key == constants.KEY_USER_INIT_ENTRY:
@@ -216,33 +242,33 @@ class CodeManager:
             return ErrorInfo(ErrorCode.ERR_USER_CODE_LOAD, ModuleCode.RUNTIME, msg)
 
         user_module, user_entry = user_hook_splits[0], user_hook_splits[1]
-        log.get_logger().debug("User module: %s, entry: %s", user_module, user_entry)
+        _logger.debug("User module: %s, entry: %s", user_module, user_entry)
 
         try:
             user_code = self.load_code_from_local(self.custom_handler, user_module, user_entry, code_key)
         except ValueError as exp:
-            log.get_logger().error("Missing user module: %s, exception: %s", user_entry, exp)
+            _logger.error("Missing user module: %s, exception: %s", user_entry, exp)
             msg = convert_response_to_jsonstr(f"Missing user module: {user_entry}, err: {exp}",
                                               FaasErrorCode.ENTRY_EXCEPTION)
             return ErrorInfo(ErrorCode.ERR_USER_CODE_LOAD, ModuleCode.RUNTIME, msg)
         except ImportError as exp:
-            log.get_logger().error("Failed to import user module: %s, exception: %s", user_entry, exp)
+            _logger.error("Failed to import user module: %s, exception: %s", user_entry, exp)
             msg = convert_response_to_jsonstr(f"Failed to import user module: {user_entry}, err: {exp}",
                                               FaasErrorCode.ENTRY_EXCEPTION)
             return ErrorInfo(ErrorCode.ERR_USER_CODE_LOAD, ModuleCode.RUNTIME, msg)
         except SyntaxError as exp:
-            log.get_logger().error("Failed to load user code: %s, exception: %s", user_entry, exp)
+            _logger.error("Failed to load user code: %s, exception: %s", user_entry, exp)
             msg = convert_response_to_jsonstr("Failed to load user code. There is syntax error in user code: "
                                               f"{user_entry}, err: {exp}", FaasErrorCode.ENTRY_EXCEPTION)
             return ErrorInfo(ErrorCode.ERR_USER_CODE_LOAD, ModuleCode.RUNTIME, msg)
         except Exception as exp:
-            log.get_logger().error("Failed to load user code: %s, exception: %s", user_entry, exp)
+            _logger.error("Failed to load user code: %s, exception: %s", user_entry, exp)
             msg = convert_response_to_jsonstr(f"Failed to load user code: {user_entry}, err: {exp}",
                                               FaasErrorCode.ENTRY_EXCEPTION)
             return ErrorInfo(ErrorCode.ERR_USER_CODE_LOAD, ModuleCode.RUNTIME, msg)
 
         if user_code is None:
-            log.get_logger().error("Missing user entry. %s", user_entry)
+            _logger.error("Missing user entry. %s", user_entry)
             msg = convert_response_to_jsonstr(f"Missing user entry. {user_entry}", FaasErrorCode.ENTRY_EXCEPTION)
             return ErrorInfo(ErrorCode.ERR_USER_CODE_LOAD, ModuleCode.RUNTIME, msg)
         return ErrorInfo()
@@ -250,7 +276,7 @@ class CodeManager:
     def __load_module(self, code_dir, module_name):
         """load module using cache"""
         if code_dir is None:
-            log.get_logger().debug(
+            _logger.debug(
                 "code dir is None, import from module name %s directly.", module_name)
             module = self.module_cache.get(module_name, None)
             if module is not None:
@@ -268,15 +294,15 @@ class CodeManager:
 
         module = self.module_cache.get(file_path, None)
         if module is not None:
-            log.get_logger().debug("successfully load module [%s] from cache", file_path)
+            _logger.debug("successfully load module [%s] from cache", file_path)
             return module
 
-        log.get_logger().debug("loading module [%s] from file system", file_path)
+        _logger.debug("loading module [%s] from file system", file_path)
         module_spec = importlib.util.spec_from_file_location(module_name, file_path)
         try:
             module = importlib.util.module_from_spec(module_spec)
         except ImportError as exp:
-            log.get_logger().warning("failed to import user python module, %s", str(exp))
+            _logger.warning("failed to import user python module, %s", str(exp))
             raise
 
         try:
@@ -284,7 +310,7 @@ class CodeManager:
             # in non-main threads, user code would be None when execute.
             module_spec.loader.exec_module(module)
         except (ImportError, SyntaxError) as exp:
-            log.get_logger().warning("Failed to exec_module user module, please check user code. %s", exp)
+            _logger.warning("Failed to exec_module user module, please check user code. %s", exp)
             raise
         self.module_cache[file_path] = module
         return module

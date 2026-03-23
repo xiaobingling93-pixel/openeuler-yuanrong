@@ -82,6 +82,8 @@ FSIntfImpl::FSIntfImpl(const std::string &ipAddr, int port, FSIntfHandlers handl
                   {StreamingMessage::kCheckpointReq, std::bind(&FSIntfImpl::RecvCheckpointRequest, this, _1, _2)},
                   {StreamingMessage::kRecoverReq, std::bind(&FSIntfImpl::RecvRecoverRequest, this, _1, _2)},
                   {StreamingMessage::kShutdownReq, std::bind(&FSIntfImpl::RecvShutdownRequest, this, _1, _2)},
+                  {StreamingMessage::kPrepareSnapReq, std::bind(&FSIntfImpl::RecvPrepareSnapRequest, this, _1, _2)},
+                  {StreamingMessage::kSnapStartedReq, std::bind(&FSIntfImpl::RecvSnapStartedRequest, this, _1, _2)},
                   {StreamingMessage::kSignalReq, std::bind(&FSIntfImpl::RecvSignalRequest, this, _1, _2)},
                   {StreamingMessage::kHeartbeatReq, std::bind(&FSIntfImpl::RecvHeartbeatRequest, this, _1, _2)},
                   {StreamingMessage::kCreateRsp, std::bind(&FSIntfImpl::RecvCreateOrInvokeResponse, this, _1, _2)},
@@ -323,7 +325,7 @@ void FSIntfImpl::CreateAsync(const CreateRequest &req, CreateRespCallback create
     auto traceId = std::make_shared<std::string>(req.traceid());
     auto designatedInstanceID = req.designatedinstanceid();
     auto span = TraceAdapter::GetInstance().StartSpan(
-        "Create", {{"requestID", *reqId}, {"funcName", funcName}, {"designatedInstanceID", designatedInstanceID}});
+        "Create", *reqId, "", {{"requestID", *reqId}, {"funcName", funcName}, {"designatedInstanceID", designatedInstanceID}});
     auto respCallback = [this, reqId, funcName, traceId, createRespCallback, span](
                             const StreamingMessage &createResp, ErrorInfo status,
                             std::function<void(bool)> needEraseWiredReq) {
@@ -403,7 +405,7 @@ void FSIntfImpl::InvokeAsync(const std::shared_ptr<InvokeMessageSpec> &req, Invo
     auto traceId = std::make_shared<std::string>(req->Immutable().traceid());
     auto funcName = std::make_shared<std::string>(req->Immutable().function());
     auto span = TraceAdapter::GetInstance().StartSpan(
-        "Invoke", {{"requestID", *reqId}, {"funcName", *funcName}, {"instanceId", *instanceId}});
+        "Invoke", *reqId, "", {{"requestID", *reqId}, {"funcName", *funcName}, {"instanceId", *instanceId}});
     auto respCallback = [this, callback, reqId, instanceId, traceId, span](
                             const StreamingMessage &invokeResp, ErrorInfo status,
                             std::function<void(bool)> needEraseWiredReq) {
@@ -589,7 +591,7 @@ void FSIntfImpl::KillAsync(const KillRequest &req, KillCallBack callback, int ti
         reqId = YR::utility::IDGenerator::GenRequestId();
     }
     auto span = TraceAdapter::GetInstance().StartSpan(
-        "Kill", {{"requestID", reqId}, {"instanceID", req.instanceid()}, {"signal", req.signal()}});
+        "Kill", reqId, "", {{"requestID", reqId}, {"instanceID", req.instanceid()}, {"signal", req.signal()}});
     auto respCallback = [callback, reqId, span](const StreamingMessage &killResp, ErrorInfo status,
                                                 std::function<void(bool)> needEraseWiredReq) {
         YRLOG_DEBUG("Receive kill response, request ID:{}", reqId);
@@ -1009,6 +1011,22 @@ void FSIntfImpl::RecvShutdownRequest(const std::string &, const std::shared_ptr<
                                                                   message->messageid(), _1));
 }
 
+void FSIntfImpl::RecvPrepareSnapRequest(const std::string &, const std::shared_ptr<StreamingMessage> &message)
+{
+    YRLOG_DEBUG("grpc prepare snap request, message id: {}", message->messageid());
+    this->HandlePrepareSnapRequest(message->preparesnapreq(),
+                                   std::bind(&FSIntfImpl::WriteResponse<PrepareSnapResponse>, this,
+                                            message->messageid(), _1));
+}
+
+void FSIntfImpl::RecvSnapStartedRequest(const std::string &, const std::shared_ptr<StreamingMessage> &message)
+{
+    YRLOG_DEBUG("grpc snap started request, message id: {}", message->messageid());
+    this->HandleSnapStartedRequest(message->snapstartedreq(),
+                                   std::bind(&FSIntfImpl::WriteResponse<SnapStartedResponse>, this,
+                                            message->messageid(), _1));
+}
+
 void FSIntfImpl::RecvSignalRequest(const std::string &, const std::shared_ptr<StreamingMessage> &message)
 {
     this->HandleSignalRequest(message->signalreq(),
@@ -1189,6 +1207,17 @@ void FSIntfImpl::TryDirectWrite(const std::string &dstInstanceID, const std::sha
     auto rw = this->fsInrfMgr->Get(dstInstanceID);
     if (rw != nullptr) {
         rw->Write(msg, callback, preWrite);
+        return;
+    }
+    CommunicationErrCallback(callback);
+}
+
+void FSIntfImpl::TryDirectWriteEvent(const std::string &dstInstanceID, const std::shared_ptr<StreamingMessage> &msg,
+                                    std::function<void(bool, ErrorInfo)> callback)
+{
+    auto rw = NewOrGetEventIntfClient(dstInstanceID);
+    if (rw != nullptr) {
+        rw->Write(msg, callback);
         return;
     }
     CommunicationErrCallback(callback);
@@ -1400,6 +1429,52 @@ bool FSIntfImpl::IsHealth()
 int FSIntfImpl::GetSelfPort() const
 {
     return this->selfPort;
+}
+
+ErrorInfo FSIntfImpl::ReconnectProxyClient(const std::string &newFsIp, int newFsPort)
+{
+    YRLOG_INFO("Reconnecting to proxy with ip: {}, port: {}", newFsIp, newFsPort);
+
+    if (!enableClientMode) {
+        YRLOG_WARN("Not in client mode, skip reconnecting to proxy");
+        return ErrorInfo();
+    }
+
+    // Update fsIp and fsPort
+    this->fsIp = newFsIp;
+    this->fsPort = newFsPort;
+
+    // Create new fsIntf client with updated ip and port
+    auto fsIntf = fsInrfMgr->NewFsIntfClient(
+        this->instanceID, "function-proxy", runtimeID,
+        ReaderWriterClientOption{.ip = newFsIp,
+                                 .port = newFsPort,
+                                 .disconnectedTimeout = PROXY_DISCONNECT_TIMEOUT_MS,
+                                 .security = security,
+                                 .resendCb = std::bind(&FSIntfImpl::ResendRequests, this, _1),
+                                 .disconnectedCb = std::bind(&FSIntfImpl::NotifyDisconnected, this, _1)},
+        ProtocolType::GRPC);
+
+    // Update system interface
+    (void)fsInrfMgr->UpdateSystemIntf(fsIntf);
+
+    // Register message handlers
+    fsIntf->RegisterMessageHandler(fsMsgHdlrs);
+
+    // Start the client
+    auto err = fsIntf->Start();
+    if (!err.OK()) {
+        YRLOG_ERROR("Failed to reconnect to proxy: {}", err.CodeAndMsg());
+        return err;
+    }
+
+    // Call reSubscribe callback if registered
+    if (reSubscribeCb) {
+        reSubscribeCb();
+    }
+
+    YRLOG_INFO("Successfully reconnected to proxy");
+    return ErrorInfo();
 }
 
 std::string FSIntfImpl::GetSelfIP() const

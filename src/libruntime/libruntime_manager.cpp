@@ -108,6 +108,12 @@ LibruntimeManager::LibruntimeManager()
 
 ErrorInfo LibruntimeManager::Init(const LibruntimeConfig &config, const std::string &rtCtx)
 {
+    // Load environment variables from file BEFORE any code reads from environment variables
+    // This must be done first to ensure all subsequent getenv() calls can read the loaded variables
+    if (!config.envFile.empty()) {
+        YR::LoadEnvFromFile(config.envFile);
+    }
+
     auto err = config.Check();
     if (!err.OK()) {
         YRLOG_ERROR("config check failed, job id is {}, err code is {}, err msg is {}", config.jobId,
@@ -141,6 +147,8 @@ ErrorInfo LibruntimeManager::Init(const LibruntimeConfig &config, const std::str
     } else {
         logParam.logLevel = Config::Instance().YR_LOG_LEVEL();
     }
+    logParam.onlyStdout = Config::Instance().YR_ONLY_STDOUT();
+    logParam.useUtcTime = Config::Instance().YR_LOG_USE_UTC_TIME();
     logParam.logDir = config.logDir;
     logParam.logBufSecs = config.logFlushInterval;
     auto result = GetValidMaxLogSizeMb(config.logFileSizeMax);
@@ -231,6 +239,9 @@ ErrorInfo LibruntimeManager::CreateLibruntime(std::shared_ptr<LibruntimeConfig> 
                                               std::shared_ptr<Libruntime> &librt)
 {
     SetClusterAccessInfo(librtConfig);
+    if (!Config::Instance().YR_JWT_TOKEN().empty()) {
+        librtConfig->authToken = Config::Instance().YR_JWT_TOKEN();
+    }
     if (librtConfig->ns.empty()) {
         librtConfig->ns = DEFAULT_YR_NAMESPACE;
     }
@@ -300,7 +311,7 @@ ErrorInfo LibruntimeManager::CreateLibruntime(std::shared_ptr<LibruntimeConfig> 
             return err;
         }
         auto gwClient = std::make_shared<GwClient>(librtConfig->functionIds[librtConfig->selfLanguage], handlers);
-        gwClient->Init(httpClient, Config::Instance().DS_CONNECT_TIMEOUT_SEC());
+        gwClient->Init(httpClient, Config::Instance().DS_CONNECT_TIMEOUT_SEC(), librtConfig->authToken);
         auto fsClient = std::make_shared<FSClient>(gwClient);
         DatasystemClients dsClients{gwClient, gwClient, gwClient, gwClient};
         return librt->Init(fsClient, dsClients);

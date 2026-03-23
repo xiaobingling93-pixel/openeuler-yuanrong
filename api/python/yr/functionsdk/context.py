@@ -46,6 +46,8 @@ _HEADER_EVENT_STREAM_VALUE: str = "text/event-stream"
 _HEADER_X_INSTANCE_SESSION: str = "X-Instance-Session"
 _SESSION_ID_KEY: str = "sessionID"
 
+_logger = logging.getLogger(__name__)
+
 
 def load_context_meta(context_meta: dict):
     """
@@ -367,7 +369,7 @@ class Context:
         return SessionService(self.__session_id)
 
 
-@dataclass
+@dataclass(init=True, repr=False, eq=False, order=False, unsafe_hash=False)
 class EnvStorage:
     """
     env storage
@@ -488,7 +490,7 @@ def _decrypt_user_data() -> dict:
     environment = parse_json_data_to_dict(delegate_decrypt.get('environment', '{}'))
     encrypted_user_data = parse_json_data_to_dict(delegate_decrypt.get('encrypted_user_data', '{}'))
 
-    log.get_logger().debug(
+    _logger.debug(
         f"Succeeded to read from ENV_DELEGATE_DECRYPT, delegate_decrypt={delegate_decrypt}, "
         f"environment={environment}, encrypted_user_data={encrypted_user_data}")
 
@@ -513,6 +515,6 @@ def _decrypt_user_data() -> dict:
 def _check_map_value(check_map: dict, key: str, default: Any) -> Any:
     value = check_map.get(key)
     if value in ("", {}, None, "{}"):
-        log.get_logger().warning("%s is %s, using default value: %s", key, value, default)
+        _logger.warning("%s is %s, using default value: %s", key, value, default)
         return default
     return value

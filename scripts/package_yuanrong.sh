@@ -19,7 +19,7 @@ BASE_DIR=$(
   cd "$(dirname "$0")"
   pwd
 )
-. ${BASE_DIR}/package/utils.sh
+. ${BASE_DIR}/utils.sh
 OUTPUT_DIR="${BASE_DIR}/../output"
 function parse_args () {
     getopt_cmd=$(getopt -o v:h -l version:,python_bin_path:,help -- "$@")
@@ -92,7 +92,6 @@ echo "start to download all packages from cache url if set"
 get_all
 
 echo "start to package openyuanrong-${BUILD_VERSION}.tar.gz"
-
 tar -zxf yr-runtime-*.tar.gz -C ${OUTPUT_DIR}/openyuanrong
 tar -zxf *functionsystem*.tar.gz -C ${OUTPUT_DIR}/openyuanrong
 

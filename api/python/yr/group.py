@@ -19,7 +19,7 @@ from yr.config import GroupOptions
 from yr import log, runtime_holder
 
 
-@dataclass
+@dataclass(init=True, repr=False, eq=False, order=False, unsafe_hash=False)
 class Group:
     """
     A class for managing the lifecycle of grouped instances.

@@ -25,6 +25,7 @@ import org.yuanrong.errorcode.ModuleCode;
 import org.yuanrong.exception.YRException;
 import org.yuanrong.exception.LibRuntimeException;
 import org.yuanrong.exception.handler.traceback.StackTraceUtils;
+import org.yuanrong.function.YRFunc1;
 import org.yuanrong.function.YRFunc4;
 import org.yuanrong.jni.LibRuntime;
 import org.yuanrong.jobexecutor.JobExecutor;
@@ -86,17 +87,13 @@ public class JobExecutorCaller {
      */
     public static String submitJob(YRJobParam yrJobParam) throws YRException {
         InstanceCreator<JobExecutor> jobExecutor = new InstanceCreator<JobExecutor>(
-                (YRFunc4<String, RuntimeEnv, ArrayList<String>, String, JobExecutor>) JobExecutor::new);
-        ArrayList<String> entryPoint = yrJobParam.getLocalEntryPoint();
+                (YRFunc1<YRJobParam, JobExecutor>) JobExecutor::new);
         InvokeOptions invokeOptions = yrJobParam.extractInvokeOptions();
         String objectID = "";
         try {
             InstanceHandler handler = jobExecutor
                 .options(invokeOptions)
-                .invoke(yrJobParam.getJobName(),
-                        yrJobParam.getRuntimeEnv(),
-                        entryPoint,
-                        invokeOptions.affinityMsgToJsonStr());
+                .invoke(yrJobParam);
             objectID = handler.getInstanceId();
         } catch (YRException e) {
             throw adaptException(e);

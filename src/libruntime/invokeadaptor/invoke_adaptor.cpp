@@ -592,6 +592,11 @@ std::pair<std::string, ErrorInfo> InvokeAdaptor::Init(RuntimeContext &runtimeCon
     handlers.checkpoint = std::bind(&InvokeAdaptor::CheckpointHandler, this, _1);
     handlers.recover = std::bind(&InvokeAdaptor::RecoverHandler, this, _1);
     handlers.shutdown = std::bind(&InvokeAdaptor::ShutdownHandler, this, _1);
+    handlers.prepareSnap = std::bind(&InvokeAdaptor::PrepareSnapHandler, this, _1);
+    handlers.snapStarted = std::bind(&InvokeAdaptor::SnapStartedHandler, this, _1);
+    if (librtConfig->libruntimeOptions.refreshEnvCallback) {
+        handlers.refreshEnv = librtConfig->libruntimeOptions.refreshEnvCallback;
+    }
     handlers.signal = std::bind(&InvokeAdaptor::SignalHandler, this, _1);
     handlers.event = std::bind(&InvokeAdaptor::EventHandler, this, _1);
     if (librtConfig->libruntimeOptions.healthCheckCallback) {
@@ -737,6 +742,8 @@ CallResult InvokeAdaptor::Call(const CallRequest &req, const libruntime::MetaDat
     functionMeta.isAsync = metaData.functionmeta().isasync();
     functionMeta.enableTensorTransport = metaData.functionmeta().enabletensortransport();
     functionMeta.tensorTransportTarget = metaData.functionmeta().tensortransporttarget();
+    std::string proto_bytes = metaData.functionmeta().code();
+    functionMeta.code.assign(proto_bytes.begin(), proto_bytes.end());
     if (functionMeta.apiType != libruntime::ApiType::Function) {
         returnObjects[0]->alwaysNative = true;
     }
@@ -893,7 +900,7 @@ SignalResponse InvokeAdaptor::SignalHandler(const SignalRequest &req)
         }
         case libruntime::Signal::ErasePendingThread: {
             if (execMgr && execMgr->isMultipleConcurrency()) {
-                YRLOG_DEBUG("recive erase pending signal req, pay load is {}", req.payload());
+                YRLOG_DEBUG("recive erase pending signal req");
                 execMgr->ErasePendingThread(req.payload());
             }
             break;
@@ -969,9 +976,12 @@ SignalResponse InvokeAdaptor::SignalHandler(const SignalRequest &req)
         }
         case libruntime::Signal::GetInstance: {
             std::string serializedMeta;
-            if (!this->librtConfig->funcMeta.SerializeToString(&serializedMeta)) {
+            google::protobuf::util::JsonPrintOptions options;
+            auto status = google::protobuf::util::MessageToJsonString(this->librtConfig->funcMeta, &serializedMeta, options);
+            if (!status.ok()) {
+                YRLOG_WARN("Failed to serialize function meta to json string, error message: {}", status.message());
                 resp.set_code(::common::ErrorCode::ERR_INNER_SYSTEM_ERROR);
-                resp.set_message("Failed to serialize FunctionMeta");
+                resp.set_message(fmt::format("Failed to serialize FunctionMeta: {}", status.message()));
             } else {
                 resp.set_code(::common::ErrorCode::ERR_NONE);
                 resp.set_message(serializedMeta);
@@ -985,6 +995,20 @@ SignalResponse InvokeAdaptor::SignalHandler(const SignalRequest &req)
                     resp.set_payload(std::move(payloadCopy));
                 }
             }
+            break;
+        }
+        case libruntime::Signal::UpdateEventInfo: {
+            YRLOG_INFO("recv UpdateEventInfo signal");
+            const std::string &payload = req.payload();
+            EventPayload eventPayload;
+            if (!eventPayload.ParseFromString(payload) || eventPayload.serverip().empty() ||
+                eventPayload.serverport() == 0 || eventPayload.serverinstanceid().empty()) {
+                resp.set_code(::common::ErrorCode::ERR_PARAM_INVALID);
+                resp.set_message("Failed to parse event payload");
+                break;
+            }
+            fsClient->UpdateEventServerInfo(eventPayload.serverip(), eventPayload.serverport(),
+                                            eventPayload.serverinstanceid());
             break;
         }
         default: {
@@ -1071,6 +1095,50 @@ ShutdownResponse InvokeAdaptor::ShutdownHandler(const ShutdownRequest &req)
         resp.set_message(err.Msg());
     }
 
+    return resp;
+}
+
+PrepareSnapResponse InvokeAdaptor::PrepareSnapHandler(const PrepareSnapRequest &req)
+{
+    PrepareSnapResponse resp;
+    YRLOG_INFO("Received PrepareSnap request, preparing for snapshot");
+
+    // Call user-provided callback if registered
+    if (librtConfig->libruntimeOptions.prepareSnapCallback) {
+        auto errorInfo = librtConfig->libruntimeOptions.prepareSnapCallback();
+        if (!errorInfo.OK()) {
+            YRLOG_ERROR("PrepareSnap callback failed: code={}, msg={}", fmt::underlying(errorInfo.Code()),
+                       errorInfo.Msg());
+            resp.set_code(static_cast<common::ErrorCode>(errorInfo.Code()));
+            resp.set_message(errorInfo.Msg());
+            return resp;
+        }
+    }
+
+    resp.set_code(common::ERR_NONE);
+    resp.set_message("PrepareSnap completed successfully");
+    return resp;
+}
+
+SnapStartedResponse InvokeAdaptor::SnapStartedHandler(const SnapStartedRequest &req)
+{
+    SnapStartedResponse resp;
+    YRLOG_INFO("Received SnapStarted request, runtime has been restored from snapshot");
+
+    // Call user-provided callback if registered
+    if (librtConfig->libruntimeOptions.snapStartedCallback) {
+        auto errorInfo = librtConfig->libruntimeOptions.snapStartedCallback();
+        if (!errorInfo.OK()) {
+            YRLOG_ERROR("SnapStarted callback failed: code={}, msg={}", fmt::underlying(errorInfo.Code()),
+                       errorInfo.Msg());
+            resp.set_code(static_cast<common::ErrorCode>(errorInfo.Code()));
+            resp.set_message(errorInfo.Msg());
+            return resp;
+        }
+    }
+
+    resp.set_code(common::ERR_NONE);
+    resp.set_message("SnapStarted handled successfully");
     return resp;
 }
 
@@ -1356,8 +1424,9 @@ void InvokeAdaptor::CreateResponseHandler(std::shared_ptr<InvokeSpec> spec, cons
     } else {
         bool isConsumeRetryTime = false;
         if (!NeedRetry(static_cast<ErrorCode>(resp.code()), spec, isConsumeRetryTime)) {
-            YRLOG_ERROR("create instance failed, start set error, req id is {}, instance id is {}", spec->requestId,
-                        instanceId);
+            YRLOG_ERROR(
+                "create instance failed, start set error, req id is {}, instance id is {}, code is {}, msg is {}",
+                spec->requestId, instanceId, resp.code(), resp.message());
             memStore->SetInstanceId(spec->returnIds[0].id, instanceId);
             ProcessErr(spec, ErrorInfo(static_cast<ErrorCode>(resp.code()), ModuleCode::CORE, resp.message(), true));
         } else {
@@ -1765,6 +1834,47 @@ ErrorInfo InvokeAdaptor::Kill(const std::string &instanceId, const std::string &
     return errInfo;
 }
 
+std::pair<ErrorInfo, KillResponse> InvokeAdaptor::KillWithResponse(const std::string &instanceId,
+                                                                     const std::string &payload, int signal)
+{
+    invokeOrderMgr->ClearInsOrderMsg(instanceId, signal);
+    KillResponse emptyResponse;
+    if (instanceId.empty()) {
+        return {ErrorInfo(YR::Libruntime::ERR_INSTANCE_ID_EMPTY, YR::Libruntime::ModuleCode::RUNTIME,
+                         "instance id is empty."), emptyResponse};
+    }
+    YRLOG_DEBUG("start kill instance with response, instance id is {}, signal is {}", instanceId, signal);
+    KillRequest killReq;
+    killReq.set_requestid(YR::utility::IDGenerator::GenRequestId());
+    killReq.set_instanceid(instanceId);
+    killReq.set_payload(payload);
+    killReq.set_signal(signal);
+
+    auto killPromise = std::make_shared<std::promise<KillResponse>>();
+    std::shared_future<KillResponse> killFuture = killPromise->get_future().share();
+    this->fsClient->KillAsync(
+        killReq, [killPromise](KillResponse rsp, const ErrorInfo &err) -> void { killPromise->set_value(rsp); });
+
+    int timeout = (signal == libruntime::Signal::killInstanceSync) ? NO_TIMEOUT : g_killTimeout;
+    if (timeout != NO_TIMEOUT) {
+        auto status = killFuture.wait_for(std::chrono::milliseconds(timeout));
+        if (status != std::future_status::ready) {
+            YRLOG_ERROR("Request timeout, failed to kill instance with instanceId: {}", instanceId);
+            return {ErrorInfo(ErrorCode::ERR_INIT_CONNECTION_FAILED, ModuleCode::RUNTIME,
+                             "Request timeout, failed to kill instance with instanceId: " + instanceId), emptyResponse};
+        }
+    }
+
+    KillResponse rsp = killFuture.get();
+    if (rsp.code() != common::ERR_NONE) {
+        YRLOG_ERROR("Failed to kill instance: {}, err is: {}", instanceId, rsp.message());
+        return {ErrorInfo(static_cast<ErrorCode>(rsp.code()), ModuleCode::CORE,
+                         "Failed to kill instance: " + instanceId + " , err is : " + rsp.message()), rsp};
+    }
+    YRLOG_DEBUG("Succeeded to receive kill instance response, instance id is {}", instanceId);
+    return {ErrorInfo(ErrorCode::ERR_OK, rsp.message()), rsp};
+}
+
 void InvokeAdaptor::KillAsync(const std::string &instanceId, const std::string &payload, int signal)
 {
     this->KillAsyncCB(instanceId, payload, signal, [instanceId, signal](const ErrorInfo &err) -> void {
@@ -1994,7 +2104,7 @@ ErrorInfo InvokeAdaptor::WaitAndCheckResp(std::shared_future<ResponseType> &futu
 
 void InvokeAdaptor::ReportMetrics(const std::string &requestId, const std::string &traceId, int value)
 {
-    if (!Config::Instance().ENABLE_METRICS()) {
+    if (!Config::Instance().ENABLE_METRICS() || !MetricsAdaptor::GetInstance()->IsInited()) {
         return;
     }
     YR::Libruntime::GaugeData data;
@@ -2116,7 +2226,12 @@ std::pair<YR::Libruntime::FunctionMeta, ErrorInfo> InvokeAdaptor::GetInstance(co
                                                                               const std::string &nameSpace,
                                                                               int timeoutSec)
 {
-    auto insId = nameSpace.empty() ? this->librtConfig->ns + "-" + name : nameSpace + "-" + name;
+    auto insId = name;
+    if (!nameSpace.empty()) {
+        insId = nameSpace + "-" + name;
+    } else if (!this->librtConfig->ns.empty()) {
+        insId = this->librtConfig->ns + "-" + name;
+    }
     YRLOG_DEBUG("start get instance, instance id is {}", insId);
     if (insId == this->librtConfig->GetInstanceId()) {
         return std::make_pair(
@@ -2148,7 +2263,9 @@ std::pair<YR::Libruntime::FunctionMeta, ErrorInfo> InvokeAdaptor::GetInstance(co
                 promise.set_value(std::make_pair(libruntime::FunctionMeta{}, errInfo));
             } else {
                 libruntime::FunctionMeta funcMeta;
-                funcMeta.ParseFromString(response.message());
+                if (auto status = google::protobuf::util::JsonStringToMessage(response.message(), &funcMeta); !status.ok()) {
+                    YRLOG_WARN("Failed to serialize function meta to json string, error message: {}", status.message());
+                }
                 if (!response.payload().empty()) {
                     funcMeta.set_payload(response.payload());
                 }
@@ -2369,6 +2486,11 @@ ErrorInfo InvokeAdaptor::StreamWriteEvent(const std::string &streamMessage, cons
     eventRst.set_message(streamMessage);
     fsClient->EventAsync(eventMessageSpec);
     return ErrorInfo();
+}
+
+std::string InvokeAdaptor::GetActiveMasterAddr()
+{
+    return functionMasterClient_->GetActiveMasterAddr();
 }
 
 }  // namespace Libruntime

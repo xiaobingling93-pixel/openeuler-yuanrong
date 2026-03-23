@@ -50,8 +50,7 @@ import (
 	"yuanrong.org/kernel/pkg/functionmanager/types"
 )
 
-type KvMock struct {
-}
+type KvMock struct{}
 
 func (k *KvMock) Put(ctx context.Context, key, val string, opts ...clientv3.OpOption) (*clientv3.PutResponse, error) {
 	// TODO implement me
@@ -69,7 +68,8 @@ func (k *KvMock) Delete(ctx context.Context, key string, opts ...clientv3.OpOpti
 }
 
 func (k *KvMock) Compact(ctx context.Context, rev int64, opts ...clientv3.CompactOption) (*clientv3.CompactResponse,
-	error) {
+	error,
+) {
 	// TODO implement me
 	panic("implement me")
 }
@@ -144,45 +144,74 @@ func TestManager_ProcessSchedulerRequest(t *testing.T) {
 		want        int
 		patchesFunc mockUtils.PatchesFunc
 	}{
-		{"case7 failed to requestOpNewLease", fields{patKeyList: make(map[string]map[string]struct{}, 1),
-			vpcMutex: sync.Mutex{}, remoteClientLease: map[string]*leaseTimer{"test-client-ID": nil},
-			remoteClientList: map[string]struct{}{}, clientMutex: sync.Mutex{}},
-			args{args: []*api.Arg{&api.Arg{Data: []byte(requestOpNewLease)}, &api.Arg{Data: []byte("")}}},
+		{
+			"case7 failed to requestOpNewLease",
+			fields{
+				patKeyList: make(map[string]map[string]struct{}, 1),
+				vpcMutex:   sync.Mutex{}, remoteClientLease: map[string]*leaseTimer{"test-client-ID": nil},
+				remoteClientList: map[string]struct{}{}, clientMutex: sync.Mutex{},
+			},
+			args{args: []*api.Arg{{Data: []byte(requestOpNewLease)}, {Data: []byte("")}}},
 			constant.UnsupportedOperationErrorCode, func() mockUtils.PatchSlice {
 				patches := mockUtils.InitPatchSlice()
 				patches = append(patches, gomonkey.ApplyFunc((*etcd3.EtcdClient).AttachAZPrefix, func(_ *etcd3.EtcdClient, key string) string { return key }))
 				return patches
+			},
+		},
+		{
+			"case8 success to requestOpNewLease",
+			fields{
+				patKeyList: make(map[string]map[string]struct{}, 1),
+				vpcMutex:   sync.Mutex{}, remoteClientLease: make(map[string]*leaseTimer, 1),
+				remoteClientList: map[string]struct{}{}, clientMutex: sync.Mutex{},
+			},
+			args{args: []*api.Arg{
+				{Data: []byte(requestOpNewLease)},
+				{Data: []byte("test-client-ID")},
+				{Data: []byte("")},
 			}},
-		{"case8 success to requestOpNewLease", fields{patKeyList: make(map[string]map[string]struct{}, 1),
-			vpcMutex: sync.Mutex{}, remoteClientLease: make(map[string]*leaseTimer, 1),
-			remoteClientList: map[string]struct{}{}, clientMutex: sync.Mutex{}},
-			args{args: []*api.Arg{&api.Arg{Data: []byte(requestOpNewLease)}, &api.Arg{Data: []byte("test-client-ID")},
-				&api.Arg{Data: []byte("")}}},
 			constant.InsReqSuccessCode, func() mockUtils.PatchSlice {
 				patches := mockUtils.InitPatchSlice()
 				patches = append(patches, gomonkey.ApplyFunc((*etcd3.EtcdClient).AttachAZPrefix, func(_ *etcd3.EtcdClient, key string) string { return key }))
 				return patches
+			},
+		},
+		{
+			"case9 failed to requestOpKeepAlive",
+			fields{
+				patKeyList: make(map[string]map[string]struct{}, 1),
+				vpcMutex:   sync.Mutex{}, remoteClientLease: make(map[string]*leaseTimer, 1),
+				remoteClientList: map[string]struct{}{}, clientMutex: sync.Mutex{},
+			},
+			args{args: []*api.Arg{
+				{Data: []byte(requestOpKeepAlive)},
+				{Data: []byte("test-client-ID")},
+				{Data: []byte("")},
 			}},
-		{"case9 failed to requestOpKeepAlive", fields{patKeyList: make(map[string]map[string]struct{}, 1),
-			vpcMutex: sync.Mutex{}, remoteClientLease: make(map[string]*leaseTimer, 1),
-			remoteClientList: map[string]struct{}{}, clientMutex: sync.Mutex{}},
-			args{args: []*api.Arg{&api.Arg{Data: []byte(requestOpKeepAlive)}, &api.Arg{Data: []byte("test-client-ID")},
-				&api.Arg{Data: []byte("")}}},
 			constant.UnsupportedOperationErrorCode, func() mockUtils.PatchSlice {
 				patches := mockUtils.InitPatchSlice()
-				patches.Append(mockUtils.PatchSlice{})
+				patches = append(patches, gomonkey.ApplyFunc((*etcd3.EtcdClient).AttachAZPrefix, func(_ *etcd3.EtcdClient, key string) string { return key }))
 				return patches
+			},
+		},
+		{
+			"case10 success to requestOpKeepAlive",
+			fields{
+				patKeyList: make(map[string]map[string]struct{}, 1),
+				vpcMutex:   sync.Mutex{}, remoteClientLease: map[string]*leaseTimer{"test-client-ID": newLeaseTimer(1000)},
+				remoteClientList: map[string]struct{}{}, clientMutex: sync.Mutex{},
+			},
+			args{args: []*api.Arg{
+				{Data: []byte(requestOpKeepAlive)},
+				{Data: []byte("test-client-ID")},
+				{Data: []byte("")},
 			}},
-		{"case10 success to requestOpKeepAlive", fields{patKeyList: make(map[string]map[string]struct{}, 1),
-			vpcMutex: sync.Mutex{}, remoteClientLease: map[string]*leaseTimer{"test-client-ID": newLeaseTimer(1000)},
-			remoteClientList: map[string]struct{}{}, clientMutex: sync.Mutex{}},
-			args{args: []*api.Arg{&api.Arg{Data: []byte(requestOpKeepAlive)}, &api.Arg{Data: []byte("test-client-ID")},
-				&api.Arg{Data: []byte("")}}},
 			constant.InsReqSuccessCode, func() mockUtils.PatchSlice {
 				patches := mockUtils.InitPatchSlice()
-				patches.Append(mockUtils.PatchSlice{})
+				patches = append(patches, gomonkey.ApplyFunc((*etcd3.EtcdClient).AttachAZPrefix, func(_ *etcd3.EtcdClient, key string) string { return key }))
 				return patches
-			}},
+			},
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -229,15 +258,20 @@ func TestManager_ProcessSchedulerRequestLibruntime(t *testing.T) {
 		want        int
 		patchesFunc mockUtils.PatchesFunc
 	}{
-		{"case1 failed to requestOpNewLease", fields{patKeyList: make(map[string]map[string]struct{}, 1),
-			vpcMutex: sync.Mutex{}, remoteClientLease: map[string]*leaseTimer{"test-client-ID": nil},
-			remoteClientList: map[string]struct{}{}, clientMutex: sync.Mutex{}},
-			args{args: []api.Arg{{}, api.Arg{Data: []byte(requestOpNewLease)}, api.Arg{Data: []byte("")}}},
+		{
+			"case1 failed to requestOpNewLease",
+			fields{
+				patKeyList: make(map[string]map[string]struct{}, 1),
+				vpcMutex:   sync.Mutex{}, remoteClientLease: map[string]*leaseTimer{"test-client-ID": nil},
+				remoteClientList: map[string]struct{}{}, clientMutex: sync.Mutex{},
+			},
+			args{args: []api.Arg{{}, {Data: []byte(requestOpNewLease)}, {Data: []byte("")}}},
 			constant.UnsupportedOperationErrorCode, func() mockUtils.PatchSlice {
 				patches := mockUtils.InitPatchSlice()
 				patches.Append(mockUtils.PatchSlice{})
 				return patches
-			}},
+			},
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -625,7 +659,6 @@ func TestManager_handleLeaseEvent(t *testing.T) {
 			fm.handleLeaseEvent(event)
 			convey.So(len(fm.remoteClientLease), convey.ShouldEqual, 0)
 		})
-
 	})
 	libruntimeClient = nil
 }

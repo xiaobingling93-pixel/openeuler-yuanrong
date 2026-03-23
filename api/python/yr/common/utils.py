@@ -22,6 +22,7 @@ import enum
 import gc
 import inspect
 import json
+import logging
 import os
 import re
 import sys
@@ -54,6 +55,7 @@ _SERIAL_NUM_INDEX = -1
 _REQUEST_ID_SPLIT_LEN = 10  # The request id length, split by "-"
 _JOB_ID_PREFIX = "job-"
 
+_logger = logging.getLogger(__name__)
 
 def create_new_event_loop():
     """
@@ -90,6 +92,21 @@ def validate_ip(input_ip: str):
     return compile_ip.match(input_ip)
 
 
+def validate_domain(domain_str: str):
+    """
+    This is a checker for input domain string
+
+    Checks validity of input domain string
+
+    Returns:
+        True, the input domain string is valid
+        False, the input domain string is invalid
+    """
+    domain_regex = r"^([a-zA-Z0-9\-]+\.)*[a-zA-Z0-9\-]+$"
+    compile_domain = re.compile(domain_regex)
+    return compile_domain.match(domain_str)
+
+
 def validate_address(address, localhost_pass=False):
     """
     Validates address parameter
@@ -101,20 +118,35 @@ def validate_address(address, localhost_pass=False):
         port: integer of port
 
     """
+    if not address:
+        raise ValueError(
+            "address is empty. Please set it in the format '<ip>:<port>', "
+            "e.g. '127.0.0.1:31501'. You can also set it via the "
+            "environment variable YR_DS_ADDRESS or YR_SERVER_ADDRESS."
+        )
     address_parts = address.split(":")
     if len(address_parts) != 2:
-        raise ValueError("address format is wrong, '<ip>:<port>' is expected.")
+        raise ValueError(
+            f"address '{address}' is invalid: expected format '<ip>:<port>' "
+            f"(exactly one ':'), but got {len(address_parts) - 1} ':' separator(s)."
+        )
     ip = address_parts[0]
     try:
         port = int(address_parts[1])
     except ValueError as err:
-        raise ValueError("port format is wrong, must be an integer.") from err
+        raise ValueError(
+            f"port '{address_parts[1]}' in address '{address}' is not a valid integer."
+        ) from err
     if not 1 <= port <= 65535:
-        raise ValueError(f"port value {port} is out of range.")
-    if localhost_pass and ip in ("127.0.0.1"):
+        raise ValueError(
+            f"port {port} in address '{address}' is out of valid range (1-65535)."
+        )
+    if localhost_pass and ip in ("127.0.0.1", "localhost"):
         return ip, port
-    if not validate_ip(ip):
-        raise ValueError(f"invalid ip {ip}")
+    if not (validate_ip(ip) or validate_domain(ip)):
+        raise ValueError(
+            f"host '{ip}' in address '{address}' is not a valid IP or domain name."
+        )
     return ip, port
 
 
@@ -204,7 +236,7 @@ def check_request_id_in_order(request_id) -> bool:
 
 def generate_resource_group_name():
     """
-    This is a wrapper generating resource group name when create virtual 
+    This is a wrapper generating resource group name when create virtual
     cluster with no name input
 
     Gets a random name string
@@ -426,7 +458,7 @@ def get_function_from_urn(urn: str) -> str:
     return constants.SEPARATOR_SLASH.join(name)
 
 
-@dataclass
+@dataclass(init=True, repr=False, eq=False, order=False, unsafe_hash=False)
 class CrossLanguageInfo:
     """
     CrossLanguageFunctionInfo
@@ -503,11 +535,11 @@ def get_environment_variable(variable_name: str, default_value: str = None) -> s
             return default_value
 
         raise RuntimeError(f"Environment variable {variable_name} is not set")
-    log.get_logger().debug("Succeed to get environment variable: %s, value: %s", variable_name, value)
+    _logger.debug("Succeed to get environment variable: %s, value: %s", variable_name, value)
     return value
 
 
-@dataclass
+@dataclass(init=True, repr=False, eq=False, order=False, unsafe_hash=False)
 class UInt64CounterData:
     """uint64 counter data"""
     name: str = ""
@@ -517,7 +549,7 @@ class UInt64CounterData:
     value: int = 0
 
 
-@dataclass
+@dataclass(init=True, repr=False, eq=False, order=False, unsafe_hash=False)
 class DoubleCounterData:
     """double counter data"""
     name: str = ""
@@ -527,7 +559,7 @@ class DoubleCounterData:
     value: float = 0.0
 
 
-@dataclass
+@dataclass(init=True, repr=False, eq=False, order=False, unsafe_hash=False)
 class GaugeData:
     """gauge data"""
     name: str = ""
@@ -647,3 +679,127 @@ def is_static_method(base_cls, f_name):
         if f_name in base.__dict__:
             return isinstance(base.__dict__[f_name], staticmethod)
     return False
+
+
+def _should_skip_env_line(line: str) -> bool:
+    """Check if a line should be skipped (empty or comment).
+
+    Args:
+        line: The line to check (should already be stripped).
+
+    Returns:
+        True if the line should be skipped, False otherwise.
+    """
+    return not line or line.startswith('#')
+
+
+def _strip_quotes(value: str) -> str:
+    """Remove surrounding quotes from a value if present.
+
+    Args:
+        value: The value string that may have quotes.
+
+    Returns:
+        The value with quotes removed if they were present.
+    """
+    if len(value) >= 2:
+        if value.startswith('"') and value.endswith('"'):
+            return value[1:-1]
+
+        if value.startswith("'") and value.endswith("'"):
+            return value[1:-1]
+    return value
+
+
+def _parse_env_line(line: str, line_num: int, env_file_path: str):
+    """Parse a single line from .env file into key-value pair.
+
+    Args:
+        line: The line to parse (should already be stripped).
+        line_num: Line number for error reporting.
+        env_file_path: File path for error reporting.
+
+    Returns:
+        Tuple of (key, value) if parsing succeeds, None otherwise.
+    """
+    if '=' not in line:
+        _logger.warning(
+            f"Invalid format in {env_file_path} at line {line_num}: "
+            f"expected KEY=VALUE format, got: {line}")
+        return None
+
+    # Split on first '=' to handle values that contain '='
+    parts = line.split('=', 1)
+    if len(parts) != 2:
+        _logger.warning(
+            f"Invalid format in {env_file_path} at line {line_num}: "
+            f"expected KEY=VALUE format, got: {line}")
+        return None
+
+    key = parts[0].strip()
+    value = parts[1].strip()
+
+    # Remove quotes if present
+    value = _strip_quotes(value)
+
+    # Skip if key is empty
+    if not key:
+        _logger.warning(
+            f"Empty key in {env_file_path} at line {line_num}")
+        return None
+
+    return (key, value)
+
+
+def load_env_from_file(env_file_path: str):
+    """Load environment variables from a .env format file.
+    This must be called before any code reads from os.environ.
+
+    The file should contain environment variables in KEY=VALUE format, one per line, e.g.:
+    KEY1=VALUE1
+    KEY2=VALUE2
+    KEY3=value with spaces
+
+    Lines starting with # are treated as comments and ignored.
+    Empty lines are ignored.
+    Leading and trailing whitespace around KEY and VALUE are stripped.
+
+    Args:
+        env_file_path (str): Path to the environment variable file (.env format).
+    """
+    if not env_file_path or env_file_path.strip() == "":
+        return
+
+    if not os.path.exists(env_file_path):
+        _logger.warning(f"Environment variable file not found: {env_file_path}")
+        return
+
+    loaded_count = 0
+    try:
+        with open(env_file_path, 'r', encoding='utf-8') as f:
+            for line_num, line in enumerate(f, 1):
+                line = line.strip()
+
+                if _should_skip_env_line(line):
+                    continue
+
+                parsed = _parse_env_line(line, line_num, env_file_path)
+                if parsed is None:
+                    continue
+
+                key, value = parsed
+                os.environ[key] = value
+                loaded_count += 1
+    except Exception as e:
+        _logger.error(
+            f"Failed to load environment variables from {env_file_path}: {e}")
+        return
+
+    if loaded_count > 0:
+        _logger.debug(
+            f"Loaded {loaded_count} environment variables from {env_file_path}")
+
+def refresh_env():
+    """Refresh environment variables from YR_ENV_FILE."""
+    env_file_path = os.environ.get("YR_ENV_FILE", "")
+    load_env_from_file(env_file_path)

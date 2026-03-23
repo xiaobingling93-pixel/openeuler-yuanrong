@@ -315,8 +315,10 @@ func (fs *FaaSScheduler) ProcessInstanceRequestLibruntime(args []api.Arg, traceI
 	insOp, targetName, extraData, eventData := parseInstanceOperation(args, traceID)
 	startTime := time.Now()
 
-	defer logger.Infof("process of instance operation %s target %s cost %dms", insOp, targetName,
-		time.Now().Sub(startTime).Milliseconds())
+	defer func() {
+		logger.Infof("process of instance operation %s target %s cost %dms", insOp, targetName,
+			time.Now().Sub(startTime).Milliseconds())
+	}()
 	result, err, shouldReply := fs.HandleRequestForward(insOp, args, traceID)
 	if shouldReply {
 		return result, err
@@ -354,7 +356,8 @@ func (fs *FaaSScheduler) ProcessInstanceRequestLibruntime(args []api.Arg, traceI
 
 // HandleRequestForward return forward result and  shouldReply flag
 func (fs *FaaSScheduler) HandleRequestForward(insOp InstanceOperation, args []api.Arg, traceID string) ([]byte, error,
-	bool) {
+	bool,
+) {
 	if !rollout.GetGlobalRolloutHandler().IsGaryUpdating {
 		return []byte{}, nil, false
 	}
@@ -395,7 +398,8 @@ func (fs *FaaSScheduler) HandleRequestForward(insOp InstanceOperation, args []ap
 }
 
 func (fs *FaaSScheduler) handleInstanceCreate(funcKey string, extraData, eventData []byte,
-	traceID string) *commonTypes.InstanceResponse {
+	traceID string,
+) *commonTypes.InstanceResponse {
 	startTime := time.Now()
 	logger := log.GetLogger().With(zap.Any("traceID", traceID), zap.Any("funcKey", funcKey))
 	funcSpec := registry.GlobalRegistry.GetFuncSpec(funcKey)
@@ -429,7 +433,8 @@ func (fs *FaaSScheduler) handleInstanceCreate(funcKey string, extraData, eventDa
 }
 
 func (fs *FaaSScheduler) handleInstanceDelete(instanceID string, extraData []byte,
-	traceID string) *commonTypes.InstanceResponse {
+	traceID string,
+) *commonTypes.InstanceResponse {
 	startTime := time.Now()
 	instance := registry.GlobalRegistry.GetInstance(instanceID)
 	if instance == nil {
@@ -446,7 +451,8 @@ func (fs *FaaSScheduler) handleInstanceDelete(instanceID string, extraData []byt
 }
 
 func (fs *FaaSScheduler) handleInstanceAcquire(targetName string, extraData []byte,
-	traceID string) *commonTypes.InstanceResponse {
+	traceID string,
+) *commonTypes.InstanceResponse {
 	startTime := time.Now()
 	funcKey, stateID := parseStateOperation(targetName)
 	logger := log.GetLogger().With(zap.Any("traceID", traceID), zap.Any("funcKey", funcKey),
@@ -674,7 +680,8 @@ func judgeForwardToOtherCluster(funcURN string, logger api.FormatLogger) (bool, 
 }
 
 func (fs *FaaSScheduler) handleInstanceRelease(targetName string, metricsData []byte,
-	traceID string) *commonTypes.InstanceResponse {
+	traceID string,
+) *commonTypes.InstanceResponse {
 	startTime := time.Now()
 	logger := log.GetLogger().With(zap.Any("traceID", traceID))
 	items := strings.Split(targetName, stateSplitStr)
@@ -729,7 +736,8 @@ func (fs *FaaSScheduler) handleInstanceRelease(targetName string, metricsData []
 }
 
 func (fs *FaaSScheduler) loadInsAlloc(targetName string, logger api.FormatLogger) (*types.InstanceAllocation,
-	snerror.SNError) {
+	snerror.SNError,
+) {
 	rawData, exist := fs.allocRecord.Load(targetName)
 	if !exist {
 		logger.Errorf("allocation of instance thread %s not found", targetName)
@@ -744,7 +752,8 @@ func (fs *FaaSScheduler) loadInsAlloc(targetName string, logger api.FormatLogger
 }
 
 func (fs *FaaSScheduler) deleteState(stateID string, funcKey string,
-	logger api.FormatLogger) *commonTypes.InstanceResponse {
+	logger api.FormatLogger,
+) *commonTypes.InstanceResponse {
 	startTime := time.Now()
 	funcSpec := registry.GlobalRegistry.GetFuncSpec(funcKey)
 	if funcSpec == nil {
@@ -761,7 +770,8 @@ func (fs *FaaSScheduler) deleteState(stateID string, funcKey string,
 }
 
 func (fs *FaaSScheduler) handleInstanceBatchRetain(target string, metricsData []byte,
-	traceID string) *commonTypes.BatchInstanceResponse {
+	traceID string,
+) *commonTypes.BatchInstanceResponse {
 	startTime := time.Now()
 	logger := log.GetLogger().With(zap.Any("traceID", traceID))
 	targetNames := strings.Split(target, ",")
@@ -808,7 +818,8 @@ func (fs *FaaSScheduler) handleInstanceBatchRetain(target string, metricsData []
 }
 
 func (fs *FaaSScheduler) handleInstanceRetain(targetName string, metricsData []byte,
-	traceID string) *commonTypes.InstanceResponse {
+	traceID string,
+) *commonTypes.InstanceResponse {
 	startTime := time.Now()
 	logger := log.GetLogger().With(zap.Any("traceID", traceID))
 	insThdMetrics := &types.InstanceThreadMetrics{}
@@ -821,7 +832,8 @@ func (fs *FaaSScheduler) handleInstanceRetain(targetName string, metricsData []b
 }
 
 func (fs *FaaSScheduler) retainInstance(targetName, traceID string, insThdMetrics *types.InstanceThreadMetrics,
-	logger api.FormatLogger) (*types.InstanceAllocation, snerror.SNError) {
+	logger api.FormatLogger,
+) (*types.InstanceAllocation, snerror.SNError) {
 	rawData, exist := fs.allocRecord.Load(targetName)
 	if !exist && len(insThdMetrics.ReacquireData) == 0 {
 		logger.Errorf("allocation of instance thread %s not found", targetName)
@@ -875,7 +887,8 @@ func (fs *FaaSScheduler) retainInstance(targetName, traceID string, insThdMetric
 }
 
 func (fs *FaaSScheduler) reacquireLease(targetName, traceID string, insThdMetrics *types.InstanceThreadMetrics,
-	logger api.FormatLogger) (*types.InstanceAllocation, snerror.SNError) {
+	logger api.FormatLogger,
+) (*types.InstanceAllocation, snerror.SNError) {
 	instanceId, _, parseErr := parseRetainTargetName(targetName)
 	if parseErr != nil {
 		return nil, snerror.New(statuscode.LeaseIDIllegalCode, statuscode.LeaseIDIllegalMsg)
@@ -916,7 +929,8 @@ func (fs *FaaSScheduler) reacquireLease(targetName, traceID string, insThdMetric
 }
 
 func (fs *FaaSScheduler) retainStateInstance(targetName string, insAlloc *types.InstanceAllocation,
-	logger api.FormatLogger) (*types.InstanceAllocation, snerror.SNError) {
+	logger api.FormatLogger,
+) (*types.InstanceAllocation, snerror.SNError) {
 	if insAlloc.Instance.InstanceStatus.Code == int32(constant.KernelInstanceStatusSubHealth) {
 		err := fs.PoolManager.ReleaseStateThread(insAlloc)
 		if err != nil {
@@ -949,7 +963,7 @@ func (fs *FaaSScheduler) handleRollout(targetName, traceID string) *commonTypes.
 	rollout.GetGlobalRolloutHandler().IsGaryUpdating = true
 	selfregister.IsRollingOut = true
 	rollout.GetGlobalRolloutHandler().UpdateForwardInstance(targetName)
-	var allocRecord = make(map[string][]string)
+	allocRecord := make(map[string][]string)
 	fs.allocRecord.Range(func(key, value any) bool {
 		allocLease, ok := key.(string)
 		if !ok {
@@ -1014,7 +1028,8 @@ func (fs *FaaSScheduler) syncAllocRecord(allocRecord map[string][]string) {
 }
 
 func (fs *FaaSScheduler) reportMetrics(funcKey string, resKey resspeckey.ResSpecKey,
-	insThdMetrics *types.InstanceThreadMetrics) {
+	insThdMetrics *types.InstanceThreadMetrics,
+) {
 	if len(funcKey) == 0 {
 		return
 	}
@@ -1111,7 +1126,8 @@ func parseRetainTargetName(targetName string) (string, string, error) {
 }
 
 func getResourceSpecification(resData, labelData []byte, funcSpec *types.FunctionSpecification) (
-	*resspeckey.ResourceSpecification, snerror.SNError) {
+	*resspeckey.ResourceSpecification, snerror.SNError,
+) {
 	resSpec := &resspeckey.ResourceSpecification{
 		CustomResources: make(map[string]int64, constant.DefaultMapSize),
 	}
@@ -1157,7 +1173,8 @@ func getResourceSpecification(resData, labelData []byte, funcSpec *types.Functio
 }
 
 func generateInstanceResponse(insAlloc *types.InstanceAllocation, snErr snerror.SNError,
-	startTime time.Time) *commonTypes.InstanceResponse {
+	startTime time.Time,
+) *commonTypes.InstanceResponse {
 	if snErr != nil {
 		return &commonTypes.InstanceResponse{
 			InstanceAllocationInfo: commonTypes.InstanceAllocationInfo{
@@ -1199,7 +1216,8 @@ func generateInstanceResponse(insAlloc *types.InstanceAllocation, snErr snerror.
 }
 
 func generateRolloutErrorResponse(registerKey string, allocRecord map[string][]string,
-	err error) *commonTypes.RolloutResponse {
+	err error,
+) *commonTypes.RolloutResponse {
 	errorCode := constant.InsReqSuccessCode
 	errorMessage := constant.InsReqSuccessMessage
 	if err != nil {

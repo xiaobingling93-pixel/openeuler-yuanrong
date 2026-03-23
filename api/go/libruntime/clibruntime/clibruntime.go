@@ -2573,3 +2573,12 @@ func IsDsHealth() bool {
 	res := int(C.CIsDsHealth())
 	return itob(res)
 }
+
+// GetActiveMasterAddr for getting active master address
+//
+//export GetActiveMasterAddr
+func GetActiveMasterAddr() string {
+	cAddr := C.CGetActiveMasterAddr()
+	defer C.free(unsafe.Pointer(cAddr))
+	return CSafeGoString(cAddr)
+}

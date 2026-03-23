@@ -77,6 +77,7 @@ class ConfigManager:
         self.rpc_timeout = _DEFAULT_RPC_TIMOUT
         self.tenant_id = ""
         self.enable_mtls = False
+        self.enable_tls = False
         self.private_key_path = ""
         self.certificate_file_path = ""
         self.verify_file_path = ""
@@ -96,6 +97,8 @@ class ConfigManager:
         self.namespace = ""
         self.log_to_driver = False
         self.dedup_logs = False
+        self.env_file = ""
+        self.auth_token = ""
 
     @property
     def deployment_config(self) -> DeploymentConfig:
@@ -284,6 +287,7 @@ class ConfigManager:
         self.rpc_timeout = conf.rpc_timeout
         self.tenant_id = conf.tenant_id
         self.enable_mtls = conf.enable_mtls
+        self.enable_tls = conf.enable_tls
         self.private_key_path = conf.private_key_path
         self.private_key_paaswd = conf.private_key_paaswd
         conf.private_key_paaswd = ""
@@ -301,6 +305,8 @@ class ConfigManager:
         self.runtime_env = conf.runtime_env
         self.log_to_driver = conf.log_to_driver
         self.dedup_logs = conf.dedup_logs
+        self.env_file = conf.env_file
+        self.auth_token = conf.auth_token
 
     def get_function_id_by_language(self, language):
         """

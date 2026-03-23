@@ -212,6 +212,9 @@ cdef extern from "src/libruntime/libruntime_options.h" nogil:
         (CErrorInfo(const string & checkpointId, shared_ptr[CBuffer] & data)) checkpointCallback
         (CErrorInfo(shared_ptr[CBuffer] & data)) recoverCallback
         (CErrorInfo(uint64_t gracePeriodSeconds)) shutdownCallback
+        (CErrorInfo()) prepareSnapCallback
+        (CErrorInfo()) snapStartedCallback
+        (void()) refreshEnvCallback
         (CErrorInfo(int sigNo, shared_ptr[CBuffer] & payload)) signalCallback
         (CErrorInfo(const CAccelerateMsgQueueHandle & intputHandle, CAccelerateMsgQueueHandle & outputHandle)) accelerateCallback
 
@@ -248,6 +251,7 @@ cdef extern from "src/libruntime/libruntime_config.h" nogil:
         vector[string] loadPaths
         CLanguageType selfLanguage
         bool enableMTLS
+        bool enableTLS
         string privateKeyPath
         string certificateFilePath
         string verifyFilePath
@@ -268,6 +272,8 @@ cdef extern from "src/libruntime/libruntime_config.h" nogil:
         string runtimePrivateKeyPath
         string dsPublicKeyPath
         bool encryptEnable
+        string envFile
+        string authToken
         CLibruntimeConfig()
         void InitConfig(const CMetaConfig & config)
         void BuildMetaConfig(CMetaConfig & config)
@@ -313,6 +319,11 @@ cdef extern from "src/proto/libruntime.pb.h" nogil:
         UPDATESCHEDULER "libruntime::Signal::UpdateScheduler"
         CANCEL "libruntime::Signal::Cancel"
 
+cdef extern from "src/libruntime/fsclient/protobuf/common.pb.h" nogil:
+    cdef enum CSnapType "common::SnapType":
+        DUMPSTATE "common::SnapType::DUMPSTATE"
+        SNAPSHOT "common::SnapType::SNAPSHOT"
+
 cdef extern from "src/dto/device.h" nogil:
     cdef cppclass CDevice "YR::Libruntime::Device":
         CDevice()
@@ -351,6 +362,7 @@ cdef extern from "src/dto/invoke_options.h" nogil:
         bool isAsync
         string tensorTransportTarget
         bool enableTensorTransport
+        vector[char] code
         string recoveredData
 
     cdef cppclass CGroupOptions "YR::Libruntime::GroupOpts":
@@ -358,7 +370,7 @@ cdef extern from "src/dto/invoke_options.h" nogil:
         int timeout
         bool sameLifecycle
         string strategy
-        
+
     cdef enum CBundleAffinity "YR::Libruntime::BundleAffinity":
         COMPACT "YR::Libruntime::BundleAffinity::COMPACT"
         DISCRETE "YR::Libruntime::BundleAffinity::DISCRETE"
@@ -427,6 +439,14 @@ cdef extern from "src/dto/invoke_options.h" nogil:
 
     cdef cppclass CInstanceOptions "YR::Libruntime::InstanceOptions":
         bool needOrder
+
+    cdef cppclass CSnapOptions "YR::Libruntime::SnapOptions":
+        CSnapType type
+        int32_t ttl
+        bool leaveRunning
+
+    cdef cppclass CSnapStartOptions "YR::Libruntime::SnapStartOptions":
+        CSnapType type
 
     cdef cppclass CUInt64CounterData "YR::Libruntime::UInt64CounterData":
         string name
@@ -671,6 +691,8 @@ cdef extern from "src/libruntime/libruntime.h" nogil:
         void Exit()
         CErrorInfo Kill(const string & instanceId, int sigNo)
         void GroupTerminate(const string & groupName)
+        pair[CErrorInfo, string] Snapshot(const string & instanceId, const CSnapOptions & snapOpts)
+        pair[CErrorInfo, string] Snapstart(const string & checkpointId, const CSnapStartOptions & snapStartOpts)
         string GetRealInstanceId(const string & objectId)
         void SaveRealInstanceId(const string & objectId, const string & instanceId, const CInstanceOptions & opts)
         void Finalize()

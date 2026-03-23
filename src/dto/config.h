@@ -67,6 +67,7 @@ Type Cast(const char *key, const std::string &value)
 class Config {
 public:
     static Config &Instance();
+    static void Reset();
 #define CONFIG_DECLARE(type, name, default)            \
 private:                                               \
     type name##_ = ParseFromEnv<type>(#name, default); \
@@ -112,11 +113,14 @@ public:                                                \
     CONFIG_DECLARE(std::string, YR_LOG_PREFIX, "");
     CONFIG_DECLARE(std::string, SNUSER_LIB_PATH, "/home/snuser/snlib");
     CONFIG_DECLARE(std::string, YR_LOG_LEVEL, "INFO");
+    CONFIG_DECLARE(bool, YR_LOG_USE_UTC_TIME, false);
+    CONFIG_DECLARE(bool, YR_ONLY_STDOUT, false);
     CONFIG_DECLARE(std::string, YRFUNCID, "");
     CONFIG_DECLARE(std::string, YR_PYTHON_FUNCID, "");
     CONFIG_DECLARE(std::string, YR_JAVA_FUNCID, "");
     CONFIG_DECLARE(std::string, YR_DS_ADDRESS, "");
     CONFIG_DECLARE(std::string, YR_SERVER_ADDRESS, "");
+    CONFIG_DECLARE(std::string, YR_DPOSIX_UDS, "");
     CONFIG_DECLARE(std::string, POSIX_LISTEN_ADDR, "");
     CONFIG_DECLARE(std::string, YR_LOG_PATH, "./");
     CONFIG_DECLARE(std::string, YR_MASTER_INFO, "");
@@ -170,7 +174,10 @@ public:                                                \
     CONFIG_DECLARE(int, FUNCTION_SCHEDULER_GRPC_PORT, 23770); // allow scheduler to interact with runtime
     CONFIG_DECLARE(int, FUNCTION_SCHEDULER_HTTP_PORT, 23771);  // allow http access to function scheduler
     CONFIG_DECLARE(std::string, NODE_ID, "");  // allow http access to function scheduler
+    CONFIG_DECLARE(std::string, YR_JWT_TOKEN, "");  // allow http access to function scheduler
 
+    CONFIG_DECLARE(std::string, YR_ENV_FILE, ""); // environment variable file path
+    CONFIG_DECLARE(std::string, YR_SEED_FILE, ""); // environment seed file path
 public:
     bool IsRunModeStandalone()
     {

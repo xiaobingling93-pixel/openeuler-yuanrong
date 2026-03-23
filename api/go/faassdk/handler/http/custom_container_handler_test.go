@@ -288,6 +288,10 @@ func (f *fakeSDKClient) IsDsHealth() bool {
 	return true
 }
 
+func (f *fakeSDKClient) GetActiveMasterAddr() string {
+	return "fakeMasterAddr"
+}
+
 func newFuncSpec() *types.FuncSpec {
 	return &types.FuncSpec{
 		FuncMetaData: types.FuncMetaData{
@@ -296,7 +300,7 @@ func newFuncSpec() *types.FuncSpec {
 			TenantId:           "123456789",
 			Version:            "$latest",
 			Timeout:            3,
-			FunctionVersionURN: "sn:cn:yrk:12345678901234561234567890123456:function:0@yrservice@test-image-env",
+			FunctionVersionURN: "sn:cn:yrk:default:function:0@yrservice@test-image-env",
 		},
 		ResourceMetaData: types.ResourceMetaData{},
 		ExtendedMetaData: types.ExtendedMetaData{
@@ -320,7 +324,7 @@ func newFuncSpecWithHealthCheck() *types.FuncSpec {
 			TenantId:           "123456789",
 			Version:            "$latest",
 			Timeout:            3,
-			FunctionVersionURN: "sn:cn:yrk:12345678901234561234567890123456:function:0@yrservice@test-image-env",
+			FunctionVersionURN: "sn:cn:yrk:default:function:0@yrservice@test-image-env",
 		},
 		ResourceMetaData: types.ResourceMetaData{},
 		ExtendedMetaData: types.ExtendedMetaData{
@@ -342,7 +346,7 @@ func newFuncSpecWithoutTimeout() *types.FuncSpec {
 			TenantId:           "123456789",
 			Version:            "$latest",
 			Timeout:            0,
-			FunctionVersionURN: "sn:cn:yrk:12345678901234561234567890123456:function:0@yrservice@test-image-env",
+			FunctionVersionURN: "sn:cn:yrk:default:function:0@yrservice@test-image-env",
 		},
 		ResourceMetaData: types.ResourceMetaData{},
 		ExtendedMetaData: types.ExtendedMetaData{

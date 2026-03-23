@@ -76,6 +76,7 @@ type LibruntimeAPI interface {
 	UpdateSchdulerInfo(schedulerName string, schedulerId string, option string)
 	IsHealth() bool
 	IsDsHealth() bool
+	GetActiveMasterAddr() string
 }
 
 // KvClient -

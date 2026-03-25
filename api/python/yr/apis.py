@@ -21,6 +21,7 @@ import functools
 import logging
 import os
 from typing import List, Dict, Optional, Tuple, Union
+from collections import defaultdict
 
 from yr.libruntime_pb2 import LanguageType
 
@@ -287,9 +288,12 @@ def _recurse(obj, ref_obj):
         return out_tensor
     if isinstance(obj, list):
         return [_recurse(item, ref_obj) for item in obj]
+    if isinstance(obj, defaultdict):
+        # 保留 default_factory
+        return type(obj)(obj.default_factory, [(k, _recurse(v, ref_obj)) for k, v in obj.items()])
     if isinstance(obj, dict):
         # 保持原始字典类型（如 OrderedDict）
-        return type(obj)((k, _recurse(v, ref_obj)) for k, v in obj.items())
+        return type(obj)([(k, _recurse(v, ref_obj)) for k, v in obj.items()])
     if isinstance(obj, set):
         new_set = set()
         for item in obj:

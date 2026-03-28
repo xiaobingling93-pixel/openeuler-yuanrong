@@ -398,8 +398,20 @@ class SystemLauncher:
 
     def load_components(self) -> None:
         components_config = self.resolver.rendered_config["mode"].get(self.mode.value, {})
+        
+        # Check if distributed master is enabled
+        enable_distributed_master = False
+        if "ds_worker" in self.resolver.rendered_config:
+            enable_distributed_master = self.resolver.rendered_config["ds_worker"]["args"].get(
+                "enable_distributed_master", False
+            )
 
         for comp_name, enable in components_config.items():
+            # Skip ds_master if distributed master is enabled
+            if comp_name == "ds_master" and enable_distributed_master:
+                logger.info(f"Skipping ds_master since enable_distributed_master is {enable_distributed_master}")
+                continue
+                
             if enable:
                 launcher_class: Optional[type[ComponentLauncher]] = self.launcher_classes.get(comp_name)
                 if launcher_class is None:

@@ -12,6 +12,7 @@ genrule(
         export GOPATH="$$(pwd)/go_cache"
         export GOMODCACHE="$$(pwd)/go_cache/mod"
         export GOCACHE="$$(pwd)/go_cache/cache"
+        export GOFLAGS="-buildvcs=false"
         export HOME="$$(pwd)"
         mkdir -p "$$GOMODCACHE" "$$GOCACHE"
         cd "$$ETCD_DIR"

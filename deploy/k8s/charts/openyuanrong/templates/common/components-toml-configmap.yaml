@@ -91,6 +91,7 @@ data:
     self_taint_prefix=""
     max_priority=""
     enable_preemption=""
+    enable_fake_suspend_resume=""
     schedule_relaxed=""
     lib_path="/home/sn/lib"
     services_path="/home/sn/service-config/services.yaml"
@@ -232,6 +233,7 @@ data:
     is_partial_watch_instances=""
     max_priority={{ quote .Values.global.common.prioritySchedule.maxPriority }}
     enable_preemption={{ quote .Values.global.common.prioritySchedule.enablePreemption }}
+    enable_fake_suspend_resume={{ quote .Values.global.common.enableFakeSuspendResume }}
     system_auth_mode={{ quote .Values.global.common.systemAuthMode }}
     enable_meta_store="false"
     meta_store_mode="local"

@@ -51,6 +51,7 @@ example/custom_runtime/openyuanrong
 example/custom_runtime/worker/yuanrong
 output/
 scripts/package/.build/
+metrics
 
 # thirdparty
 thirdparty/

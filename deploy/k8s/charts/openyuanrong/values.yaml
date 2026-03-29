@@ -443,6 +443,8 @@ global:
     # enable the relaxed scheduling policy. When the relaxed number of available nodes or pods is selected,
     # the scheduling progress exits without traversing all nodes or pods.(default -1)
     scheduleRelaxed: -1
+    # enable fake suspend resume: resume by sending to original owner proxy instead of rescheduling
+    enableFakeSuspendResume: false
     prioritySchedule:
       # instance schedule maximum priority
       # if 0 indicates default schedule strategy, other value greater than 0 indicates priority schedule strategy

@@ -31,6 +31,7 @@ MapReduce 将计算任务分解为 Map 和 Reduce 两个主要阶段，从而简
 我们通过 "import this" 来加载 Zen of Python 的文本内容，并将其分割为指定数量
 
 ```python
+import sys
 import subprocess
 
 zen_of_python = subprocess.check_output([sys.executable, "-c", "import this"])
@@ -86,6 +87,7 @@ def apply_reduce(results):
 最后，汇总结果进行输出，并调用 yr.finalize() 来清理上下文。
 
 ```python
+import sys
 import subprocess
 import yr
 

@@ -432,6 +432,9 @@ if [ "$PACKAGE_ALL" == "true" ]; then
 
     cd "$BASE_DIR"/api/python
     rm -rf build/ dist/ *.egg-info
+    PYTHON_RUNTIME_VERSION=${PACKAGE_PYTHON_VERSION} $PYTHON3_SDK_BIN_PATH setup.py bdist_wheel
+    cp -ar $API_DIR/python/dist/*whl $BASE_DIR/output/
+    rm -rf build/ dist/ *.egg-info
     SETUP_TYPE=dashboard PYTHON_RUNTIME_VERSION=${PACKAGE_PYTHON_VERSION} $PYTHON3_SDK_BIN_PATH setup.py bdist_wheel
     cp -ar $API_DIR/python/dist/*whl $BASE_DIR/output/
     rm -rf build/ dist/ *.egg-info

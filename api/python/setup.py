@@ -107,7 +107,7 @@ elif os.getenv("SETUP_TYPE") == "all":
     )
     setup_spec.entry_points = {
         "console_scripts": [
-            "yr=yr.inner.scripts:run_yr",
+            "yr=yr.cli.main:main",
             "yrcli=yr.cli.scripts:main",
         ]
     }
@@ -122,7 +122,8 @@ else:
     setup_spec.extras["cpp"] = [f"{base_name}_cpp_sdk==" + setup_spec.version]
     setup_spec.entry_points = {
         "console_scripts": [
-            "yr=yr.inner.scripts:run_yr",
+            "yrcli=yr.cli.scripts:main",
+            "yr=yr.cli.main:main",
         ]
     }
 

@@ -251,39 +251,7 @@ while getopts 'athr:l:v:S:DcCgPET:p:B:m:j:gGU' opt; do
         exit 0
         ;;
     r)
-        # Support both HTTP/HTTPS and gRPC addresses
-        # Extract host and port from various formats like:
-        #   http://host:port, https://host:port, grpc://host:port, host:port
-        host=$(echo "${OPTARG}" | sed -E 's|grpc://||; s|http://||; s|https://||; s|/.*||' | cut -d: -f1)
-        port=$(echo "${OPTARG}" | sed -E 's|grpc://||; s|http://||; s|https://||; s|/.*||' | cut -s -d: -f2)
-
-        # Set default port based on protocol
-        if [ -z "$port" ]; then
-            if echo "${OPTARG}" | grep -q "^https://"; then
-                port=443
-            elif echo "${OPTARG}" | grep -q "^grpc://"; then
-                port=443
-            else
-                port=80
-            fi
-        fi
-
-        # Check if port is reachable using multiple methods
-        port_reachable=false
-        if timeout 3 bash -c "exec 3<>/dev/tcp/${host}/${port}" 2>/dev/null; then
-            port_reachable=true
-        elif command -v nc &>/dev/null && nc -z -w 3 "${host}" "${port}" 2>/dev/null; then
-            port_reachable=true
-        elif curl --connect-timeout 3 --max-time 5 "${OPTARG}" &>/dev/null; then
-            port_reachable=true
-        fi
-
-        if [ "$port_reachable" = true ]; then
-            log_info "use remote cache server: ${OPTARG} (host: ${host}, port: ${port})"
-            BAZEL_OPTIONS="$BAZEL_OPTIONS --remote_cache=${OPTARG}"
-        else
-            log_warning "no remote cache server available at ${host}:${port}"
-        fi
+        REMOTE_CACHE="${OPTARG}"
         ;;
     l)
         if [ ! -d "${OPTARG}" ] ;then
@@ -357,6 +325,44 @@ while getopts 'athr:l:v:S:DcCgPET:p:B:m:j:gGU' opt; do
         ;;
     esac
 done
+
+# Support remote cache via environment variable REMOTE_CACHE
+# Command-line -r takes precedence; falls back to env var
+if [ -n "${REMOTE_CACHE}" ]; then
+    cache_addr="${REMOTE_CACHE}"
+    # Extract host and port from various formats like:
+    #   http://host:port, https://host:port, grpc://host:port, host:port
+    host=$(echo "${cache_addr}" | sed -E 's|grpc://||; s|http://||; s|https://||; s|/.*||' | cut -d: -f1)
+    port=$(echo "${cache_addr}" | sed -E 's|grpc://||; s|http://||; s|https://||; s|/.*||' | cut -s -d: -f2)
+
+    # Set default port based on protocol
+    if [ -z "$port" ]; then
+        if echo "${cache_addr}" | grep -q "^https://"; then
+            port=443
+        elif echo "${cache_addr}" | grep -q "^grpc://"; then
+            port=443
+        else
+            port=80
+        fi
+    fi
+
+    # Check if port is reachable using multiple methods
+    port_reachable=false
+    if timeout 3 bash -c "exec 3<>/dev/tcp/${host}/${port}" 2>/dev/null; then
+        port_reachable=true
+    elif command -v nc &>/dev/null && nc -z -w 3 "${host}" "${port}" 2>/dev/null; then
+        port_reachable=true
+    elif curl --connect-timeout 3 --max-time 5 "${cache_addr}" &>/dev/null; then
+        port_reachable=true
+    fi
+
+    if [ "$port_reachable" = true ]; then
+        log_info "use remote cache server: ${cache_addr} (host: ${host}, port: ${port})"
+        BAZEL_OPTIONS="$BAZEL_OPTIONS --remote_cache=${cache_addr}"
+    else
+        log_warning "no remote cache server available at ${host}:${port}"
+    fi
+fi
 
 if [ "$BAZEL_COMMAND" != "clean" ]; then
    bash ${BASE_DIR}/tools/download_dependency.sh

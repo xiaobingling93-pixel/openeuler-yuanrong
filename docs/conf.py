@@ -27,7 +27,7 @@ logging.basicConfig(
 )
 
 if os.getenv("BUILD_WITH_PACKAGE", "").lower() == "false":
-    sys.path.append(str(Path("..", "api", "python").resolve()))
+    sys.path.insert(0, str(Path("..", "api", "python").resolve()))
 else:
     logging.info("The installed openYuanrong package will be used to generate the Python API doc")
 

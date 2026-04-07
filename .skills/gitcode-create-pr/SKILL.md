@@ -1,5 +1,5 @@
 ---
-name: gitcode-pr
+name: gitcode-create-pr
 description: Use when the user asks to create or update a pull request on GitCode, submit a merge request from a fork, or format PR content for GitCode API submission
 ---
 

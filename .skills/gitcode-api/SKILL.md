@@ -1,5 +1,5 @@
 ---
-name: gitcode
+name: gitcode-api
 description: Interact with GitCode API - repos, issues, PRs, users, organizations
 ---
 

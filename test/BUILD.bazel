@@ -351,6 +351,7 @@ cc_test(
     "common/common.h",
     "common/mock_libruntime.h",
   ],
+  data = [":test_dummy_lib.so"],
   includes = ["."],
   deps = [
     "@gtest//:gtest_main",
@@ -359,6 +360,13 @@ cc_test(
   ],
   linkopts = ["-lstdc++fs", "-ldl"],
   linkstatic = True,
+)
+
+cc_binary(
+  name = "test_dummy_lib.so",
+  srcs = ["api/dummy_lib.cpp"],
+  linkshared = True,
+  linkstatic = False,
 )
 
 cc_test(

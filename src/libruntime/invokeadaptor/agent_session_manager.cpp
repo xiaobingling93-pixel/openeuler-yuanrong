@@ -385,6 +385,10 @@ std::pair<ErrorInfo, std::shared_ptr<Buffer>> AgentSessionManager::Wait(const st
         YRLOG_WARN("current session id is empty, return directly");
         return {ErrorInfo(ERR_PARAM_INVALID, ModuleCode::RUNTIME, "session id is empty"), nullptr};
     }
+    if (timeoutMs < 0) {
+        YRLOG_WARN("timeoutMs is negative, return directly");
+        return {ErrorInfo(ERR_PARAM_INVALID, ModuleCode::RUNTIME, "timeoutMs must not be negative"), nullptr};
+    }
     auto sessionCtx = GetSessionContext(sessionId);
     if (sessionCtx == nullptr) {
         YRLOG_WARN("session ctx of session id: {} is empty, return derectly", sessionId);
@@ -420,18 +424,12 @@ std::pair<ErrorInfo, std::shared_ptr<Buffer>> AgentSessionManager::Wait(const st
     waitNotifyCtx->state = WaitState::WAITING;
     waitNotifyCtx->notifyData = nullptr;
     YRLOG_DEBUG("current notify ctx state of session id: {} is WAITING, timeoutMs is {}", sessionId, timeoutMs);
-    if (timeoutMs < 0) {
-        waitNotifyCtx->cv.wait(lock, [waitNotifyCtx]() {
-            return waitNotifyCtx->state == WaitState::NOTIFIED || waitNotifyCtx->state == WaitState::INTERRUPTED;
-        });
-    } else {
-        auto deadline = std::chrono::steady_clock::now() + std::chrono::milliseconds(timeoutMs);
-        bool notified = waitNotifyCtx->cv.wait_until(lock, deadline, [waitNotifyCtx]() {
-            return waitNotifyCtx->state == WaitState::NOTIFIED || waitNotifyCtx->state == WaitState::INTERRUPTED;
-        });
-        if (!notified) {
-            waitNotifyCtx->state = WaitState::TIMEOUT;
-        }
+    auto deadline = std::chrono::steady_clock::now() + std::chrono::milliseconds(timeoutMs);
+    bool notified = waitNotifyCtx->cv.wait_until(lock, deadline, [waitNotifyCtx]() {
+        return waitNotifyCtx->state == WaitState::NOTIFIED || waitNotifyCtx->state == WaitState::INTERRUPTED;
+    });
+    if (!notified) {
+        waitNotifyCtx->state = WaitState::TIMEOUT;
     }
     auto result = waitNotifyCtx->notifyData;
     auto finalState = waitNotifyCtx->state;

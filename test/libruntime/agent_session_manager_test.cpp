@@ -93,6 +93,19 @@ TEST_F(AgentSessionManagerTest, WaitNotifySuccessTest)
     waiter.join();
 }
 
+TEST_F(AgentSessionManagerTest, WaitWithNegativeTimeoutTest)
+{
+    const std::string sessionId = "session-negative-timeout";
+    auto sessionCtx = CreateSessionContext(sessionId);
+
+    sessionCtx->mutex.lock();
+    auto [err, buf] = manager_->Wait(sessionId, -1);
+    ASSERT_EQ(err.Code(), ErrorCode::ERR_PARAM_INVALID);
+    ASSERT_EQ(buf, nullptr);
+    sessionCtx->mutex.unlock();
+    manager_->ReleaseSessionContextReference(sessionCtx);
+}
+
 TEST_F(AgentSessionManagerTest, WaitTimeoutTest)
 {
     const std::string sessionId = "session-timeout";

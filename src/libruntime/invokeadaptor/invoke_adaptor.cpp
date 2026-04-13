@@ -94,6 +94,7 @@ libruntime::FunctionMeta convertFuncMetaToProto(std::shared_ptr<InvokeSpec> spec
     meta.set_applicationname(spec->functionMeta.appName);
     meta.set_apitype(spec->functionMeta.apiType);
     meta.set_classname(spec->functionMeta.className);
+    meta.set_code(spec->functionMeta.code.data(), spec->functionMeta.code.size());
     meta.set_codeid(spec->functionMeta.codeId);
     meta.set_functionid(spec->functionMeta.functionId);
     meta.set_functionname(spec->functionMeta.funcName);
@@ -126,6 +127,8 @@ YR::Libruntime::FunctionMeta convertProtoToFuncMeta(const libruntime::FunctionMe
     funcMeta.isAsync = funcMetaProto.isasync();
     funcMeta.isGenerator = funcMetaProto.isgenerator();
     funcMeta.codeId = funcMetaProto.codeid();
+    auto code = funcMetaProto.code();
+    funcMeta.code.assign(code.begin(), code.end());
     funcMeta.needOrder = funcMetaProto.needorder();
     funcMeta.recoveredData = funcMetaProto.payload();
     return funcMeta;

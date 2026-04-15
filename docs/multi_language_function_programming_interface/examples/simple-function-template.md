@@ -135,7 +135,7 @@
     set(CMAKE_CXX_FLAGS "-pthread")
     set(BUILD_SHARED_LIBS ON)
 
-    # 替换 YR_INSTALL_PATH 的值为 openYuanrong 安装路径，可通过 yr version 命令查看
+    # 替换 YR_INSTALL_PATH 的值为 openYuanrong 安装路径，可通过 python3 -c "import yr;print(yr.__path__[0])" 命令查看
     set(YR_INSTALL_PATH "/usr/local/lib/python3.9/site-packages/yr/inner")
     link_directories(${YR_INSTALL_PATH}/runtime/sdk/cpp/lib)
     include_directories(
@@ -522,7 +522,7 @@
     set(CMAKE_CXX_FLAGS "-pthread")
     set(BUILD_SHARED_LIBS ON)
 
-    # 替换 YR_INSTALL_PATH 的值为 openYuanrong 安装路径，可通过 yr version 命令查看
+    # 替换 YR_INSTALL_PATH 的值为 openYuanrong 安装路径，可通过 python3 -c "import yr;print(yr.__path__[0])" 命令查看
     set(YR_INSTALL_PATH "/usr/local/lib/python3.9/site-packages/yr/inner")
     link_directories(${YR_INSTALL_PATH}/runtime/sdk/cpp/lib)
     include_directories(
@@ -942,7 +942,7 @@
     set(SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR})
     set(BINARY_DIR ${SOURCE_DIR}/build)
 
-    # 替换 YR_INSTALL_PATH 的值为openYuanrong安装路径，可通过 yr version 命令查看
+    # 替换 YR_INSTALL_PATH 的值为openYuanrong安装路径，可通过 python3 -c "import yr;print(yr.__path__[0])" 命令查看
     set(YR_INSTALL_PATH "/usr/local/lib/python3.9/site-packages/yr/inner")
     link_directories(${YR_INSTALL_PATH}/runtime/sdk/cpp/lib)
     include_directories(
@@ -1495,7 +1495,7 @@ curl -X POST -i ${META_SERVICE_ENDPOINT}/serverless/v1/podpools -H 'Content-Type
     set(SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR})
     set(BINARY_DIR ${SOURCE_DIR}/build)
 
-    # 替换 YR_INSTALL_PATH 的值为openYuanrong安装路径，可通过 yr version 命令查看
+    # 替换 YR_INSTALL_PATH 的值为openYuanrong安装路径，可通过 python3 -c "import yr;print(yr.__path__[0])" 命令查看
     set(YR_INSTALL_PATH "/usr/local/lib/python3.9/site-packages/yr/inner")
     link_directories(${YR_INSTALL_PATH}/runtime/sdk/cpp/lib)
     include_directories(

@@ -39,3 +39,13 @@
   yr_config
   yr_version
 ```
+
+
+
+## 获取安装路径
+
+```shell
+python3 -c "import yr;print(yr.__path__[0])"
+# /usr/local/lib/python3.9/site-packages/yr
+```
+

@@ -14,20 +14,19 @@
 
 ```bash
 yr start --master \
---enable_dashboard=true \
---enable_collector=true \
---enable_separated_redirect_runtime_std=true \
---labels="{\"master\":\"dev\",\"agent\":\"dev\"}"
+-s 'mode.master.dashboard=true' -s 'mode.master.collector=true' \
+-s 'function_agent.args.enable_separated_redirect_runtime_std=true' \
+-s 'function_agent.env.INIT_LABELS="{\"master\":\"dev\",\"agent\":\"dev\"}"'
 ```
 
 再部署从节点，设置一个标签 `{"agent":"uat"}`。
 
 ```bash
-# 替换 {Cluster master info} 为成功部署主节点时输出的主节点信息
-yr start --labels="{\"agent\":\"uat\"}" \
---enable_collector=true \
---enable_separated_redirect_runtime_std=true \
---master_info "{Cluster master info}"
+# 替换 {function_master_ip} 和 {function_master_port} 为成功部署主节点时输出的对应信息
+yr start \
+-s 'mode.agent.collector=true' -s 'function_agent.args.enable_separated_redirect_runtime_std=true' \
+-s 'function_agent.env.INIT_LABELS="{\"agent\":\"uat\"}"' \
+--master_address {http_scheme}://{function_master_ip}:{function_master_port}
 ```
 
 代码中有状态函数 Detector 的 show 方法将帮助打印函数实例所在节点信息。我们为两个 Detector 实例分别设置了资源亲和标签。主节点带有 key 为 master 的标签，因此第一个 Detector 实例不会部署在主节点上。第二个 Detector 实例不仅要求标签的 key 匹配，还要求标签的 value 也必须匹配。因此，第二个 Detector 实例只会部署在从节点上。
@@ -93,18 +92,17 @@ if __name__ == '__main__':
 
 ```bash
 yr start --master \
---enable_dashboard=true \
---enable_collector=true \
---enable_separated_redirect_runtime_std=true
+-s 'mode.master.dashboard=true' -s 'mode.master.collector=true' \
+-s 'function_agent.args.enable_separated_redirect_runtime_std=true'
 ```
 
 再部署从节点：
 
 ```bash
-# 替换 {Cluster master info} 为成功部署主节点时输出的主节点信息
-yr start --enable_collector=true \
---enable_separated_redirect_runtime_std=true \
---master_info "{Cluster master info}"
+# 替换 {master_ip} 和 {function_master_port} 为成功部署主节点时输出的对应信息
+yr start \
+-s 'mode.agent.collector=true' -s 'function_agent.args.enable_separated_redirect_runtime_std=true' \
+--master_address http://{master_ip}:{function_master_port}
 ```
 
 代码中有状态函数的 show 方法将帮助打印函数实例所在节点信息。我们配置 Detector 实例的标签 key 为 detector，不与有相同标签的实例部署在同一节点。Partner 实例配置标签 key 为 partner，不与有相同标签的实例部署在同一节点，但要与标签 key 为 detector 的实例部署在同一节点。

@@ -11,7 +11,20 @@ yr.Gauge
         1. 类似 Prometheus 的数据结构。
         2. 计费信息会上报到后台的 openYuanrong 采集器。
         3. 不能在 driver 中使用。
-        4. 如果启动 yr 时未配置 `runtime_metrics_config`，则样例无法使用。
+        4. 使用本样例前，需在部署时配置 `RUNTIME_METRICS_CONFIG` 环境变量，否则样例无法使用。可通过以下方式配置：
+
+           方式一：在 config.toml 中配置
+
+           .. code-block:: toml
+
+               [function_agent.env]
+               RUNTIME_METRICS_CONFIG = '{"backends":[{"immediatelyExport":{"name":"LingYun","enable":true,"exporters":[{"prometheusPushExporter":{"enable":true,"initConfig":{"ip":"{prometheus_ip}","port":{prometheus_port}}}}]}}]}'
+
+           方式二：通过命令行参数覆盖
+
+           .. code-block:: bash
+
+               yr start --master -s 'function_agent.env.RUNTIME_METRICS_CONFIG="{\"backends\":[{\"immediatelyExport\":{\"name\":\"LingYun\",\"enable\":true,\"exporters\":[{\"prometheusPushExporter\":{\"enable\":true,\"initConfig\":{\"ip\":\"{prometheus_ip}\",\"port\":{prometheus_port}}}}]}}]}"'
 
     参数：
         - **name** (str) - 名称。

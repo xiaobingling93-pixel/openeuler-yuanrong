@@ -767,7 +767,23 @@
 
 ### 在主机集群中运行函数服务
 
-参考[配置支持函数服务](deploy-processes-config-support-faas)确保您部署的 openYuanrong 集群支持运行函数服务。在所有节点创建相同的代码包目录，例如 `/opt/mycode/service`，用于存放构建生成的可执行函数代码。
+默认配置部署只支持运行无状态函数和有状态函数，参考以下命令可增加支持函数服务。
+
+首先部署主节点：
+
+```bash
+yr start --master \
+-s 'mode.master.frontend=true' -s 'mode.master.function_scheduler=true' -s 'mode.master.meta_service=true'
+```
+
+部署从节点：
+
+```bash
+# 替换 {function_master_ip} 和 {function_master_port} 为成功部署主节点时输出的对应信息
+yr start --master_address {http_scheme}://{function_master_ip}:{function_master_port}
+```
+
+在所有节点创建相同的代码包目录，例如 `/opt/mycode/service`，用于存放构建生成的可执行函数代码。
 
 :::::{tab-set}
 ::::{tab-item} Python

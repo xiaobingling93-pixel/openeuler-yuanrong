@@ -111,8 +111,8 @@ public class Main {
 
 自定义资源的类型及总量需要在部署 openYuanrong 时指定，除 GPU 和 NPU 外，openYuanrong 并不会检测其他自定义资源。参考以下示例指定节点上的自定义资源，自定义资源量仅用于在调度时做逻辑扣减，并不会限制 openYuanrong 函数对实际物理资源的使用量。
 
-```shell
-yr start --master --custom_resources="{\"ssd\":1}"
+```bash
+yr start --master -s 'function_agent.args.custom_resources="{\"ssd\":1}"'
 ```
 
 以下为配置无状态函数的资源。

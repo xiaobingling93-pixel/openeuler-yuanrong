@@ -93,17 +93,17 @@ void FSIntf::ReceiveRequestLoop(void)
 void FSIntf::ReturnCallResult(const std::shared_ptr<CallResultMessageSpec> result, bool isCreate,
                               CallResultCallBack callback)
 {
-    if (isCreate) {
-        if (result->Immutable().code() == common::ERR_NONE) {
-            status.SetInitialized();
-        } else {
-            status.SetInitializingFailure(result->Immutable().code(), result->Immutable().message());
-        }
-    }
     auto reqId = result->Immutable().requestid();
-    this->CallResultAsync(result, [this, reqId, callback](const CallResultAck &ack) {
+    this->CallResultAsync(result, [this, reqId, result, isCreate, callback](const CallResultAck &ack) {
         if (!DeleteProcessingRequestId(reqId)) {
             YRLOG_ERROR("Call request has already finished, request ID: {}", reqId);
+        }
+        if (isCreate) {
+            if (result->Immutable().code() == common::ERR_NONE) {
+                status.SetInitialized();
+            } else {
+                status.SetInitializingFailure(result->Immutable().code(), result->Immutable().message());
+            }
         }
         if (callback) {
             callback(ack);
@@ -278,7 +278,8 @@ void FSIntf::HandleCheckpointRequest(const CheckpointRequest &req, CheckpointCal
 {
     this->checkpointRecoverExecutor.Handle(
         [this, req, callback]() {
-            if (ExistProcessingRequestId()) {
+            // 拦截 initcall 之外的其他请求
+            if (status.IsInitialized() && ExistProcessingRequestId()) {
                 CheckpointResponse resp;
                 resp.set_code(common::ERR_INSTANCE_BUSY);
                 resp.set_message("Instance is busy handling requests, checkpoint cannot be performed now.");

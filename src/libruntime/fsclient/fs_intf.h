@@ -456,6 +456,12 @@ private:
             return state == INITIALIZED;
         }
 
+        bool IsInitialized()
+        {
+            absl::ReaderMutexLock lock(&this->mu);
+            return state == INITIALIZED;
+        }
+
         std::pair<common::ErrorCode, std::string> GetErrorInfo(void) const
         {
             return err;

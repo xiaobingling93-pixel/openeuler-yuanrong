@@ -8,6 +8,8 @@ import pytest
 import importlib
 import os
 import yr
+import random
+import signal
 import subprocess
 from common import SHUTDOWN_KEY, SHUTDOWN_VALUE, Add, AsyncAdd, init_in_process, Counter
 from yr import Affinity, AffinityKind, AffinityType, LabelOperator, OperatorType
@@ -272,6 +274,25 @@ def test_py_yr_stateful_order_preserve(init_yr):
         assert yr.get(res)[i-1] == i, "assert failed."
     ins.terminate()
 
+def test_py_invoke_instance_recover(init_yr):
+    @yr.instance
+    class Instance:
+        def __init__(self) -> None:
+            self.num = 1
+
+        def add(self):
+            v = random.randint(0, 1)
+            pid = os.getpid()
+            if v == 0:
+                os.kill(pid, signal.SIGKILL)
+            self.num = self.num + 1
+            return self.num
+
+    opts = yr.InvokeOptions()
+    opts.name = "actor_recover"
+    opts.recover_retry_times = 10
+    ins = Instance.options(opts).invoke()
+    assert (yr.get(ins.add.invoke()), 2)
 
 def test_py_get_instance_after_recover(init_yr):
     @yr.instance
